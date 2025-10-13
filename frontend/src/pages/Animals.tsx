@@ -1,9 +1,15 @@
 import React, { useState, useCallback } from 'react';
+import { Grid, List as ListIcon, MapPin } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { AnimalType, ConservationStatus } from '../types';
 import { AnimalGrid } from '../components/animals/AnimalGrid';
 import { SearchBar } from '../components/animals/SearchBar';
 import { AnimalFilters } from '../components/animals/AnimalFilters';
+import { Card } from '../components/common/Card';
+import { Button } from '../components/common/Button';
 import { useAnimals } from '../hooks/useAnimals';
+
+type ViewMode = 'grid' | 'list';
 
 export const Animals: React.FC = () => {
   const [search, setSearch] = useState('');
@@ -11,6 +17,7 @@ export const Animals: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<ConservationStatus | undefined>();
   const [sortBy, setSortBy] = useState<'name' | 'age' | 'popularity'>('name');
   const [page, setPage] = useState(1);
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
 
   const { animals, loading, total, totalPages } = useAnimals({
     search,
@@ -62,9 +69,29 @@ export const Animals: React.FC = () => {
           </p>
         </div>
 
-        {/* Search Bar */}
-        <div className="mb-6">
-          <SearchBar onSearch={handleSearch} initialValue={search} />
+        {/* Search Bar and View Toggle */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="flex-1">
+            <SearchBar onSearch={handleSearch} initialValue={search} />
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant={viewMode === 'grid' ? 'primary' : 'outline'}
+              onClick={() => setViewMode('grid')}
+              size="md"
+            >
+              <Grid size={18} className="mr-2" />
+              Grid
+            </Button>
+            <Button
+              variant={viewMode === 'list' ? 'primary' : 'outline'}
+              onClick={() => setViewMode('list')}
+              size="md"
+            >
+              <ListIcon size={18} className="mr-2" />
+              List
+            </Button>
+          </div>
         </div>
 
         {/* Content Grid */}
@@ -82,15 +109,83 @@ export const Animals: React.FC = () => {
             />
           </div>
 
-          {/* Animals Grid */}
+          {/* Animals Display */}
           <div className="lg:col-span-3">
             {!loading && animals.length > 0 && (
-              <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
-                Showing {animals.length} of {total} animals
+              <div className="mb-4 flex items-center justify-between">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  Showing {animals.length} of {total} animals
+                </span>
               </div>
             )}
             
-            <AnimalGrid animals={animals} loading={loading} />
+            {viewMode === 'grid' ? (
+              <AnimalGrid animals={animals} loading={loading} />
+            ) : (
+              <div className="space-y-4">
+                {loading ? (
+                  <div className="space-y-4">
+                    {[1, 2, 3].map(i => (
+                      <Card key={i} padding="none">
+                        <div className="animate-pulse flex">
+                          <div className="bg-gray-300 dark:bg-gray-700 h-40 w-48"></div>
+                          <div className="flex-1 p-6 space-y-3">
+                            <div className="h-6 bg-gray-300 dark:bg-gray-700 rounded w-3/4"></div>
+                            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-1/2"></div>
+                            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded"></div>
+                            <div className="h-4 bg-gray-300 dark:bg-gray-700 rounded w-5/6"></div>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                ) : animals.length === 0 ? (
+                  <Card padding="lg" className="text-center">
+                    <p className="text-gray-600 dark:text-gray-400">No animals found</p>
+                  </Card>
+                ) : (
+                  animals.map((animal) => (
+                    <Card key={animal._id} padding="none" hover className="overflow-hidden">
+                      <Link to={`/animals/${animal._id}`} className="flex flex-col sm:flex-row">
+                        <img
+                          src={animal.mainPhoto}
+                          alt={animal.name}
+                          className="w-full sm:w-48 h-48 sm:h-40 object-cover"
+                        />
+                        <div className="flex-1 p-6">
+                          <div className="flex items-start justify-between mb-2">
+                            <div>
+                              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                                {animal.name}
+                              </h3>
+                              <p className="text-gray-600 dark:text-gray-400 italic">
+                                {animal.species}
+                              </p>
+                            </div>
+                            <span className="inline-block px-3 py-1 bg-primary-light dark:bg-primary/20 text-primary text-sm font-medium rounded-full">
+                              {animal.type}
+                            </span>
+                          </div>
+                          <p className="text-gray-700 dark:text-gray-300 mb-4 line-clamp-2">
+                            {animal.description}
+                          </p>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
+                              <span>Age: {animal.age} years</span>
+                              <span>•</span>
+                              <span><MapPin size={14} className="inline mr-1" />{animal.habitat.name}</span>
+                            </div>
+                            <Button variant="ghost" size="sm">
+                              View Details →
+                            </Button>
+                          </div>
+                        </div>
+                      </Link>
+                    </Card>
+                  ))
+                )}
+              </div>
+            )}
 
             {/* Pagination */}
             {totalPages > 1 && (

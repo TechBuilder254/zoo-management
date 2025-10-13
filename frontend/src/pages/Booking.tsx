@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Tag, Users, TrendingDown } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useBooking } from '../hooks/useBooking';
 import { bookingService } from '../services/bookingService';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
+import { Input } from '../components/common/Input';
 import { DatePicker } from '../components/booking/DatePicker';
 import { TicketSelector } from '../components/booking/TicketSelector';
 import { formatCurrency } from '../utils/formatCurrency';
@@ -15,6 +17,10 @@ export const Booking: React.FC = () => {
   const navigate = useNavigate();
   const { visitDate, tickets, setVisitDate, updateTickets, getTotalAmount, getTotalTickets } = useBooking();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [promoCode, setPromoCode] = useState('');
+  const [isApplyingPromo, setIsApplyingPromo] = useState(false);
+  const [discount, setDiscount] = useState(0);
+  const [promoApplied, setPromoApplied] = useState(false);
 
   if (!isAuthenticated) {
     return (
@@ -37,6 +43,56 @@ export const Booking: React.FC = () => {
 
   const totalAmount = getTotalAmount();
   const totalTickets = getTotalTickets();
+  
+  // Calculate group discount (10% for 5+ tickets, 15% for 10+ tickets)
+  const groupDiscountPercentage = totalTickets >= 10 ? 15 : totalTickets >= 5 ? 10 : 0;
+  const groupDiscount = groupDiscountPercentage > 0 ? (totalAmount * groupDiscountPercentage) / 100 : 0;
+  
+  // Calculate final amount
+  const subtotal = totalAmount - groupDiscount;
+  const promoDiscount = promoApplied ? (subtotal * discount) / 100 : 0;
+  const finalAmount = subtotal - promoDiscount;
+
+  const handleApplyPromo = async () => {
+    if (!promoCode.trim()) {
+      toast.error('Please enter a promo code');
+      return;
+    }
+
+    setIsApplyingPromo(true);
+    try {
+      // Simulate API call to validate promo code
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Mock promo codes for demo
+      const validPromoCodes: { [key: string]: number } = {
+        'WILDLIFE10': 10,
+        'FAMILY15': 15,
+        'SUMMER20': 20,
+        'WELCOME5': 5,
+      };
+
+      const upperPromoCode = promoCode.toUpperCase();
+      if (validPromoCodes[upperPromoCode]) {
+        setDiscount(validPromoCodes[upperPromoCode]);
+        setPromoApplied(true);
+        toast.success(`Promo code applied! ${validPromoCodes[upperPromoCode]}% discount`);
+      } else {
+        toast.error('Invalid promo code');
+      }
+    } catch (error) {
+      toast.error('Failed to apply promo code');
+    } finally {
+      setIsApplyingPromo(false);
+    }
+  };
+
+  const handleRemovePromo = () => {
+    setPromoCode('');
+    setDiscount(0);
+    setPromoApplied(false);
+    toast.success('Promo code removed');
+  };
 
   const handleProceedToPayment = async () => {
     if (!visitDate) {
@@ -54,6 +110,7 @@ export const Booking: React.FC = () => {
       const bookingData = {
         visitDate: visitDate.toISOString(),
         tickets,
+        promoCode: promoApplied ? promoCode : undefined,
       };
       
       const booking = await bookingService.create(bookingData);
@@ -170,22 +227,120 @@ export const Booking: React.FC = () => {
                   )}
                 </div>
 
-                <div className="pt-4 border-t-2 border-gray-300 dark:border-gray-600">
-                  <div className="flex justify-between items-center mb-2">
-                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                      Total Tickets
+                {/* Promo Code Section */}
+                <div className="pt-4 border-t dark:border-gray-700">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <Tag size={16} className="inline mr-1" />
+                    Promo Code
+                  </label>
+                  {!promoApplied ? (
+                    <div className="flex gap-2">
+                      <Input
+                        type="text"
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                        placeholder="Enter code"
+                        disabled={isApplyingPromo}
+                      />
+                      <Button
+                        variant="outline"
+                        onClick={handleApplyPromo}
+                        isLoading={isApplyingPromo}
+                        disabled={!promoCode.trim()}
+                      >
+                        Apply
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                      <div className="flex items-center text-green-700 dark:text-green-400">
+                        <Tag size={16} className="mr-2" />
+                        <span className="font-semibold">{promoCode}</span>
+                      </div>
+                      <button
+                        onClick={handleRemovePromo}
+                        className="text-red-600 hover:text-red-700 text-sm"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    Try: WILDLIFE10, FAMILY15, SUMMER20
+                  </p>
+                </div>
+
+                {/* Group Discount Indicator */}
+                {groupDiscountPercentage > 0 && (
+                  <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                    <div className="flex items-start space-x-2">
+                      <Users size={18} className="text-blue-600 mt-0.5" />
+                      <div className="flex-1">
+                        <p className="font-semibold text-blue-900 dark:text-blue-300 text-sm">
+                          Group Discount Applied!
+                        </p>
+                        <p className="text-xs text-blue-700 dark:text-blue-400">
+                          {groupDiscountPercentage}% off for {totalTickets}+ tickets
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Calculation Summary */}
+                <div className="pt-4 border-t-2 border-gray-300 dark:border-gray-600 space-y-2">
+                  <div className="flex justify-between items-center text-sm">
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Subtotal ({totalTickets} tickets)
                     </p>
-                    <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                      {totalTickets}
+                    <p className="text-gray-900 dark:text-white">
+                      {formatCurrency(totalAmount)}
                     </p>
                   </div>
-                  <div className="flex justify-between items-center">
+
+                  {groupDiscount > 0 && (
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-green-600 dark:text-green-400 flex items-center">
+                        <TrendingDown size={14} className="mr-1" />
+                        Group Discount ({groupDiscountPercentage}%)
+                      </p>
+                      <p className="text-green-600 dark:text-green-400">
+                        -{formatCurrency(groupDiscount)}
+                      </p>
+                    </div>
+                  )}
+
+                  {promoDiscount > 0 && (
+                    <div className="flex justify-between items-center text-sm">
+                      <p className="text-green-600 dark:text-green-400 flex items-center">
+                        <Tag size={14} className="mr-1" />
+                        Promo Discount ({discount}%)
+                      </p>
+                      <p className="text-green-600 dark:text-green-400">
+                        -{formatCurrency(promoDiscount)}
+                    </p>
+                  </div>
+                  )}
+
+                  <div className="flex justify-between items-center pt-2 border-t dark:border-gray-700">
                     <p className="text-xl font-bold text-gray-900 dark:text-white">
                       Total Amount
                     </p>
-                    <p className="text-2xl font-bold text-primary">
+                    <div className="text-right">
+                      {(groupDiscount > 0 || promoDiscount > 0) && (
+                        <p className="text-sm text-gray-500 line-through">
                       {formatCurrency(totalAmount)}
                     </p>
+                      )}
+                      <p className="text-2xl font-bold text-primary">
+                        {formatCurrency(finalAmount)}
+                      </p>
+                      {(groupDiscount + promoDiscount) > 0 && (
+                        <p className="text-xs text-green-600">
+                          You save {formatCurrency(groupDiscount + promoDiscount)}!
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

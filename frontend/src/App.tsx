@@ -20,7 +20,15 @@ import { Events } from './pages/Events';
 import { Profile } from './pages/Profile';
 import { MyBookings } from './pages/MyBookings';
 import { Favorites } from './pages/Favorites';
+import { About } from './pages/About';
+import { Contact } from './pages/Contact';
 import { NotFound } from './pages/NotFound';
+
+// Admin pages
+import { Dashboard as AdminDashboard } from './pages/admin/Dashboard';
+import { AnimalManagement } from './pages/admin/AnimalManagement';
+import { BookingManagement } from './pages/admin/BookingManagement';
+import { ReviewModeration } from './pages/admin/ReviewModeration';
 
 // Protected Route Component
 interface ProtectedRouteProps {
@@ -37,6 +45,24 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   return isAuthenticated ? children : <Navigate to="/login" replace />;
 };
 
+// Admin Route Component
+interface AdminRouteProps {
+  children: React.ReactElement;
+}
+
+const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  if (isLoading) {
+    return <Loader fullScreen />;
+  }
+
+  // Check if user is authenticated and has admin role
+  const isAdmin = isAuthenticated && user?.role === 'admin';
+  
+  return isAdmin ? children : <Navigate to="/" replace />;
+};
+
 // App Routes Component
 const AppRoutes: React.FC = () => {
   return (
@@ -50,6 +76,8 @@ const AppRoutes: React.FC = () => {
           <Route path="/animals" element={<Animals />} />
           <Route path="/animals/:id" element={<AnimalDetail />} />
           <Route path="/events" element={<Events />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
           
           {/* Protected Routes */}
           <Route
@@ -82,6 +110,40 @@ const AppRoutes: React.FC = () => {
               <ProtectedRoute>
                 <Favorites />
               </ProtectedRoute>
+            }
+          />
+          
+          {/* Admin Routes */}
+          <Route
+            path="/admin/dashboard"
+            element={
+              <AdminRoute>
+                <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/animals"
+            element={
+              <AdminRoute>
+                <AnimalManagement />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/bookings"
+            element={
+              <AdminRoute>
+                <BookingManagement />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/reviews"
+            element={
+              <AdminRoute>
+                <ReviewModeration />
+              </AdminRoute>
             }
           />
           

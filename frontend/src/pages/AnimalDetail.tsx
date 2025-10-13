@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MapPin, Calendar, Scale, Info, ArrowLeft, Share2 } from 'lucide-react';
+import { MapPin, Calendar, Scale, Info, ArrowLeft } from 'lucide-react';
 import { useAnimal } from '../hooks/useAnimals';
 import { useAuth } from '../hooks/useAuth';
 import { reviewService } from '../services/reviewService';
@@ -12,6 +12,8 @@ import { FavoriteButton } from '../components/animals/FavoriteButton';
 import { RatingStars } from '../components/reviews/RatingStars';
 import { ReviewList } from '../components/reviews/ReviewList';
 import { ReviewForm } from '../components/reviews/ReviewForm';
+import { SocialShare } from '../components/common/SocialShare';
+import { ImageLightbox } from '../components/common/ImageLightbox';
 import toast from 'react-hot-toast';
 
 export const AnimalDetail: React.FC = () => {
@@ -22,11 +24,13 @@ export const AnimalDetail: React.FC = () => {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   useEffect(() => {
     if (id) {
       loadReviews();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const loadReviews = async () => {
@@ -54,18 +58,6 @@ export const AnimalDetail: React.FC = () => {
     }
   };
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: animal?.name,
-        text: `Check out ${animal?.name} at Wildlife Zoo!`,
-        url: window.location.href,
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      toast.success('Link copied to clipboard!');
-    }
-  };
 
   if (loading) {
     return <Loader fullScreen text="Loading animal details..." />;
@@ -106,11 +98,11 @@ export const AnimalDetail: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Images */}
           <div>
-            <Card padding="none" className="overflow-hidden">
+            <Card padding="none" className="overflow-hidden cursor-pointer" onClick={() => setIsLightboxOpen(true)}>
               <img
                 src={images[selectedImageIndex]}
                 alt={animal.name}
-                className="w-full h-96 object-cover"
+                className="w-full h-96 object-cover hover:opacity-90 transition-opacity"
               />
             </Card>
             {images.length > 1 && (
@@ -138,18 +130,16 @@ export const AnimalDetail: React.FC = () => {
 
           {/* Details */}
           <div>
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
-                  {animal.name}
-                </h1>
-                <p className="text-xl text-gray-600 dark:text-gray-400 italic">
-                  {animal.species}
-                </p>
-              </div>
-              <Button variant="ghost" onClick={handleShare}>
-                <Share2 size={20} />
-              </Button>
+            <div className="mb-4">
+              <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                {animal.name}
+              </h1>
+              <p className="text-xl text-gray-600 dark:text-gray-400 italic mb-4">
+                {animal.species}
+              </p>
+              <SocialShare
+                title={`Check out ${animal.name} at Wildlife Zoo!`}
+              />
             </div>
 
             <div className="flex items-center space-x-4 mb-6">
@@ -269,6 +259,17 @@ export const AnimalDetail: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Image Lightbox */}
+      <ImageLightbox
+        images={images}
+        currentIndex={selectedImageIndex}
+        isOpen={isLightboxOpen}
+        onClose={() => setIsLightboxOpen(false)}
+        onNext={() => setSelectedImageIndex((prev) => (prev + 1) % images.length)}
+        onPrevious={() => setSelectedImageIndex((prev) => (prev - 1 + images.length) % images.length)}
+        title={animal.name}
+      />
     </div>
   );
 };

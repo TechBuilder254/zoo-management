@@ -1,5 +1,5 @@
 import api from './api';
-import { Booking, BookingFormData } from '../types';
+import { Booking } from '../types';
 
 export interface CreateBookingData {
   visitDate: string;

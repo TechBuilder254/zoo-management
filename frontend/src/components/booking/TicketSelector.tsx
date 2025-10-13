@@ -66,7 +66,7 @@ export const TicketSelector: React.FC<TicketSelectorProps> = ({
         Select Tickets
       </h3>
 
-      {ticketTypes.map((ticket, index) => (
+      {ticketTypes.map((ticket) => (
         <Card key={ticket.label} padding="md" className="border border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">

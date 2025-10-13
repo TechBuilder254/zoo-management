@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Mail, Phone, MapPin } from 'lucide-react';
 import { Button } from './Button';
 import { Input } from './Input';
+import { newsletterService } from '../../services/newsletterService';
 import toast from 'react-hot-toast';
 
 export const Footer: React.FC = () => {
@@ -20,8 +21,7 @@ export const Footer: React.FC = () => {
     setIsSubscribing(true);
     
     try {
-      // TODO: Implement newsletter subscription API call
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulated delay
+      await newsletterService.subscribe(email);
       toast.success('Successfully subscribed to newsletter!');
       setEmail('');
     } catch (error) {
@@ -115,15 +115,15 @@ export const Footer: React.FC = () => {
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
                 <MapPin size={18} className="mt-1 flex-shrink-0" />
-                <span className="text-sm">123 Zoo Street, Wildlife City, WC 12345</span>
+                <span className="text-sm">Langata Road, Karen, Nairobi</span>
               </li>
               <li className="flex items-center space-x-3">
                 <Phone size={18} className="flex-shrink-0" />
-                <span className="text-sm">+1 (555) 123-4567</span>
+                <span className="text-sm">+254 720 123 456</span>
               </li>
               <li className="flex items-center space-x-3">
                 <Mail size={18} className="flex-shrink-0" />
-                <span className="text-sm">info@wildlifezoo.com</span>
+                <span className="text-sm">info@wildlifezoo.co.ke</span>
               </li>
             </ul>
           </div>
