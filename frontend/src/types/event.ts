@@ -1,32 +1,38 @@
-export type EventCategory = 'Feeding' | 'Educational' | 'Special Event' | 'Workshop';
-
 export interface Event {
-  _id: string;
+  id: string;
   title: string;
   description: string;
-  eventDate: string;
-  startTime: string;
-  endTime: string;
+  start_date: string; // snake_case from Supabase
+  end_date: string; // snake_case from Supabase
   location: string;
-  image?: string;
-  category: EventCategory;
-  capacity: number;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  image_url?: string; // snake_case from Supabase
+  capacity?: number;
+  price?: number;
+  status: 'UPCOMING' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
+  created_at: string; // snake_case from Supabase
+  updated_at: string; // snake_case from Supabase
+  // Compatibility fields (camelCase aliases)
+  _id?: string;
+  category?: string;
+  eventDate?: string; // alias for start_date
+  startTime?: string;
+  endTime?: string;
+  image?: string; // alias for image_url
+  isActive?: boolean;
+  updatedAt?: string; // alias for updated_at
 }
 
-export interface EventFormData {
+export interface CreateEventData {
   title: string;
   description: string;
-  eventDate: Date;
-  startTime: string;
-  endTime: string;
+  start_date: string;
+  end_date: string;
   location: string;
-  category: EventCategory;
-  capacity: number;
+  image_url?: string;
+  capacity?: number;
+  price?: number;
 }
 
-
-
-
+export interface UpdateEventData extends Partial<CreateEventData> {
+  id: string;
+}

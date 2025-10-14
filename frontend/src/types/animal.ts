@@ -20,23 +20,20 @@ export interface Habitat {
 }
 
 export interface Animal {
-  // Backend fields (primary)
+  // Backend fields (primary) - using snake_case from Supabase
   id: string;
   name: string;
   species: string;
   category: string;
   habitat: string | Habitat;
   description: string;
-  imageUrl: string;
-  image_url?: string; // Supabase format
-  diet: string;
-  lifespan: string;
-  status: string;
+  image_url?: string; // Optional field from Supabase
+  diet?: string; // Optional field from Supabase
+  lifespan?: string; // Optional field from Supabase
+  status: 'ACTIVE' | 'INACTIVE' | 'UNDER_CARE'; // Exact enum from Supabase
   location?: any;
-  createdAt: string;
-  created_at?: string; // Supabase format
-  updatedAt: string;
-  updated_at?: string; // Supabase format
+  created_at?: string; // Optional field from Supabase
+  updated_at?: string; // Optional field from Supabase
   _count?: {
     reviews: number;
     favorites: number;
@@ -44,6 +41,7 @@ export interface Animal {
   // Legacy fields for compatibility
   _id?: string;
   type?: AnimalType;
+  imageUrl?: string; // camelCase alias for image_url
   mainPhoto?: string;
   photos?: string[];
   age?: number;

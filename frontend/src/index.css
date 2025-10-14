@@ -94,6 +94,30 @@ code {
   }
 }
 
+/* Fix for text duplication issues */
+.animal-name {
+  text-shadow: none !important;
+  -webkit-text-stroke: 0 !important;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Aggressive fix for text duplication in tables */
+table td span {
+  text-shadow: none !important;
+  -webkit-text-stroke: 0 !important;
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  transform: translateZ(0) !important;
+  backface-visibility: hidden !important;
+  position: relative !important;
+  z-index: 10 !important;
+}
+
 
 
 

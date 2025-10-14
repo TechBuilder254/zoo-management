@@ -165,7 +165,7 @@ export const BookingManagement: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400">
-                          {format(new Date(booking.visitDate), 'MMM dd, yyyy')}
+                          {format(new Date(booking.visit_date || booking.visitDate || ''), 'MMM dd, yyyy')}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400">
                           {booking.quantity || 0}

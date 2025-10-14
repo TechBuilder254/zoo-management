@@ -117,13 +117,15 @@ export const Dashboard: React.FC = () => {
                           Booking #{booking.id.slice(-8)}
                         </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {booking.user.name}
+                          {booking.user?.name || booking.users?.name || 'Guest'}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-primary">KSh {booking.totalPrice.toLocaleString()}</p>
+                        <p className="font-semibold text-primary">
+                          KSh {(booking.totalPrice || booking.total_price || 0).toLocaleString()}
+                        </p>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {new Date(booking.createdAt).toLocaleDateString()}
+                          {new Date(booking.createdAt || booking.created_at).toLocaleDateString()}
                         </p>
                       </div>
                     </div>

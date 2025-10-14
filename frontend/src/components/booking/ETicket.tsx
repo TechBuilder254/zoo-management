@@ -44,7 +44,7 @@ export const ETicket: React.FC<ETicketProps> = ({ booking }) => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <p className="text-sm text-gray-600 mb-1">Visit Date</p>
-            <p className="font-semibold text-gray-900">{formatDate(booking.visitDate)}</p>
+            <p className="font-semibold text-gray-900">{formatDate(booking.visit_date || booking.visitDate || '')}</p>
           </div>
           <div>
             <p className="text-sm text-gray-600 mb-1">Total Tickets</p>
@@ -78,7 +78,7 @@ export const ETicket: React.FC<ETicketProps> = ({ booking }) => {
           ) : (
             <div className="flex justify-between">
               <span>{booking.ticketType} × {booking.quantity}</span>
-              <span>{formatCurrency(booking.totalPrice)}</span>
+              <span>{formatCurrency(booking.total_price || booking.totalPrice || 0)}</span>
             </div>
           )}
           <div className="border-t-2 border-gray-300 pt-2 mt-2 flex justify-between font-bold text-lg">

@@ -51,7 +51,7 @@ export const BookingProvider: React.FC<BookingProviderProps> = ({ children }) =>
         setTicketPrices(priceMap);
         
         // Update ticket prices in state
-        setTickets(prev => ({
+        setTickets((prev: Tickets) => ({
           adult: { ...prev.adult, price: priceMap.adult },
           child: { ...prev.child, price: priceMap.child },
           senior: { ...prev.senior, price: priceMap.senior },
@@ -66,7 +66,7 @@ export const BookingProvider: React.FC<BookingProviderProps> = ({ children }) =>
   }, []);
 
   const updateTickets = (type: keyof Tickets, quantity: number): void => {
-    setTickets((prev) => ({
+    setTickets((prev: Tickets) => ({
       ...prev,
       [type]: {
         ...prev[type],

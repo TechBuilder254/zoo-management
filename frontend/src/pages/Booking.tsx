@@ -101,7 +101,10 @@ export const Booking: React.FC = () => {
     setIsProcessing(true);
     try {
       const bookingData = {
+        visit_date: visitDate.toISOString(),
         visitDate: visitDate.toISOString(),
+        ticket_type: 'mixed',
+        quantity: totalTickets,
         tickets,
         promoCode: promoApplied ? promoData?.promoCode?.id : undefined,
         discountAmount: promoApplied ? promoData?.discountAmount : 0,

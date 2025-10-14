@@ -50,7 +50,7 @@ export const Events: React.FC = () => {
                          event.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || event.category === selectedCategory;
     const matchesDate = !selectedDate || 
-                       new Date(event.eventDate).toDateString() === selectedDate.toDateString();
+                       new Date(event.start_date || event.eventDate || '').toDateString() === selectedDate.toDateString();
     
     return matchesSearch && matchesCategory && matchesDate;
   });

@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { TrendingUp, TrendingDown, DollarSign, Calendar, Download, BarChart3, PieChart } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Sidebar } from '../../components/admin/Sidebar';
+import { financialService, FinancialData } from '../../services/financialService';
+import toast from 'react-hot-toast';
 
 interface RevenueData {
   period: string;
@@ -21,36 +23,28 @@ interface ExpenseData {
 }
 
 export const FinancialManagement: React.FC = () => {
-  const [selectedPeriod, setSelectedPeriod] = useState('month');
-  const [selectedYear, setSelectedYear] = useState('2024');
+  const [selectedPeriod, setSelectedPeriod] = useState('monthly');
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
+  const [, setFinancialData] = useState<FinancialData | null>(null);
+  const [, setLoading] = useState(true);
 
-  // Mock data - replace with real API calls
-  const revenueData: RevenueData[] = [
-    {
-      period: 'January 2024',
-      ticketSales: 1250000,
-      events: 450000,
-      merchandise: 320000,
-      donations: 180000,
-      total: 2200000
-    },
-    {
-      period: 'December 2023',
-      ticketSales: 1180000,
-      events: 380000,
-      merchandise: 290000,
-      donations: 150000,
-      total: 2000000
-    },
-    {
-      period: 'November 2023',
-      ticketSales: 1120000,
-      events: 420000,
-      merchandise: 310000,
-      donations: 165000,
-      total: 2015000
-    }
-  ];
+  // Fetch financial data
+  useEffect(() => {
+    const fetchFinancialData = async () => {
+      try {
+        setLoading(true);
+        const data = await financialService.getFinancialData(selectedPeriod, parseInt(selectedYear));
+        setFinancialData(data);
+      } catch (error) {
+        console.error('Failed to fetch financial data:', error);
+        toast.error('Failed to load financial data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFinancialData();
+  }, [selectedPeriod, selectedYear]);
 
   const expenseData: ExpenseData[] = [
     {
@@ -92,6 +86,11 @@ export const FinancialManagement: React.FC = () => {
     { month: 'Apr', amount: 1850000 },
     { month: 'May', amount: 2300000 },
     { month: 'Jun', amount: 2450000 }
+  ];
+
+  const revenueData: RevenueData[] = [
+    { period: 'Current Month', ticketSales: 1500000, events: 450000, merchandise: 250000, donations: 100000, total: 2300000 },
+    { period: 'Previous Month', ticketSales: 1400000, events: 350000, merchandise: 200000, donations: 150000, total: 2100000 }
   ];
 
   const currentMonth = revenueData[0];

@@ -1,18 +1,12 @@
 import api from './api';
+import { Booking } from '../types/booking';
 
 export interface DashboardStats {
   totalAnimals: number;
   totalBookings: number;
   totalRevenue: number;
   totalVisitors: number;
-  recentBookings: Array<{
-    id: string;
-    totalPrice: number;
-    createdAt: string;
-    user: {
-      name: string;
-    };
-  }>;
+  recentBookings: Booking[];
   popularAnimals: Array<{
     id: string;
     name: string;

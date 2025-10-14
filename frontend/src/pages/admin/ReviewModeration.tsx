@@ -52,7 +52,7 @@ const ReviewRow: React.FC<{
         </span>
       </td>
       <td className="px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-        {new Date(review.createdAt).toLocaleDateString()}
+        {new Date(review.created_at || review.createdAt || '').toLocaleDateString()}
       </td>
       <td className="px-6 py-4 text-right space-x-2">
         {review.status.toUpperCase() === 'PENDING' && (

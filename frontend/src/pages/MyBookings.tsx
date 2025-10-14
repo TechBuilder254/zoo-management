@@ -48,8 +48,8 @@ export const MyBookings: React.FC = () => {
       
       // Update local state
       setBookings(bookings.map(b => 
-        b._id === selectedBooking._id 
-          ? { ...b, status: 'cancelled' } 
+        b.id === selectedBooking.id 
+          ? { ...b, status: 'CANCELLED' as const } 
           : b
       ));
       
@@ -311,7 +311,7 @@ export const MyBookings: React.FC = () => {
       : booking.quantity || 0;
     
     // Create iCal format
-    const visitDate = new Date(booking.visitDate);
+    const visitDate = new Date(booking.visit_date || booking.visitDate || '');
     const startDate = visitDate.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     const endDate = new Date(visitDate.getTime() + 4 * 60 * 60 * 1000).toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     
@@ -341,10 +341,10 @@ END:VCALENDAR`;
   };
 
   const canCancelBooking = (booking: Booking) => {
-    const visitDate = new Date(booking.visitDate);
+    const visitDate = new Date(booking.visit_date || booking.visitDate || '');
     const now = new Date();
     const daysDifference = Math.ceil((visitDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    return booking.status === 'upcoming' && daysDifference >= 2;
+    return booking.status === 'CONFIRMED' && daysDifference >= 2;
   };
 
   if (loading) {
@@ -393,7 +393,7 @@ END:VCALENDAR`;
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-gray-900 dark:text-white">
-                        {formatDate(booking.visitDate)}
+                        {formatDate(booking.visit_date || booking.visitDate || '')}
                       </h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
                         Booking Ref: {booking.bookingReference}
@@ -419,13 +419,13 @@ END:VCALENDAR`;
                   </div>
 
                   <div className="flex items-center space-x-2">
-                    {booking.status === 'upcoming' && (
+                    {booking.status === 'CONFIRMED' && (
                       <span className="px-3 py-1 bg-green-100 text-green-800 text-sm font-medium rounded-full flex items-center">
                         <CheckCircle size={16} className="mr-1" />
                         Confirmed
                       </span>
                     )}
-                    {booking.status === 'cancelled' && (
+                    {booking.status === 'CANCELLED' && (
                       <span className="px-3 py-1 bg-red-100 text-red-800 text-sm font-medium rounded-full flex items-center">
                         <XCircle size={16} className="mr-1" />
                         Cancelled
@@ -505,7 +505,7 @@ END:VCALENDAR`;
                     <span className="font-semibold">Booking Reference:</span> {selectedBooking.bookingReference}
                   </p>
                   <p className="text-sm">
-                    <span className="font-semibold">Visit Date:</span> {formatDate(selectedBooking.visitDate)}
+                    <span className="font-semibold">Visit Date:</span> {formatDate(selectedBooking.visit_date || selectedBooking.visitDate || '')}
                   </p>
                   <p className="text-sm">
                     <span className="font-semibold">Amount:</span> {formatCurrency(selectedBooking.totalPrice || selectedBooking.totalAmount || 0)}

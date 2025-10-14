@@ -100,7 +100,7 @@ export const EventsManagement: React.FC = () => {
         const updatedEvents = await eventService.getAll();
         setEvents(updatedEvents);
       } else if (modalType === 'edit' && selectedEvent) {
-        await eventService.update(selectedEvent._id, backendData);
+        await eventService.update(selectedEvent._id || selectedEvent.id, backendData);
         toast.success('Event updated successfully');
         // Refresh events list
         const updatedEvents = await eventService.getAll();
@@ -297,7 +297,7 @@ export const EventsManagement: React.FC = () => {
                         <td className="py-4 px-4">
                           <div className="text-sm">
                             <p className="font-medium text-gray-900 dark:text-white">
-                              {new Date(event.eventDate).toLocaleDateString()}
+                              {new Date(event.start_date || event.eventDate || '').toLocaleDateString()}
                             </p>
                             <p className="text-gray-600 dark:text-gray-400">
                               {event.startTime} - {event.endTime}
@@ -317,8 +317,8 @@ export const EventsManagement: React.FC = () => {
                           </div>
                         </td>
                         <td className="py-4 px-4">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(event.isActive)}`}>
-                            {getStatusText(event.isActive)}
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(event.isActive || false)}`}>
+                            {getStatusText(event.isActive || false)}
                           </span>
                         </td>
                         <td className="py-4 px-4">
@@ -343,7 +343,7 @@ export const EventsManagement: React.FC = () => {
                               variant="outline"
                               size="sm"
                               className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50"
-                              onClick={() => handleDeleteEvent(event._id)}
+                              onClick={() => handleDeleteEvent(event._id || event.id)}
                             >
                         <Trash2 size={16} />
                             </Button>
@@ -396,7 +396,7 @@ export const EventsManagement: React.FC = () => {
                   <div>
                     <h4 className="font-medium text-gray-900 dark:text-white mb-1">Date</h4>
                     <p className="text-gray-600 dark:text-gray-400">
-                      {new Date(selectedEvent.eventDate).toLocaleDateString()}
+                      {new Date(selectedEvent.start_date || selectedEvent.eventDate || '').toLocaleDateString()}
                     </p>
                     </div>
                   <div>
@@ -424,8 +424,8 @@ export const EventsManagement: React.FC = () => {
 
                     <div>
                   <h4 className="font-medium text-gray-900 dark:text-white mb-1">Status</h4>
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedEvent.isActive)}`}>
-                    {getStatusText(selectedEvent.isActive)}
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedEvent.isActive || false)}`}>
+                    {getStatusText(selectedEvent.isActive || false)}
                           </span>
                       </div>
 

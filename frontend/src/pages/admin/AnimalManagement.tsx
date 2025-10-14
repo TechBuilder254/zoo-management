@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit, Trash2, Eye } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, PawPrint } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
@@ -9,6 +9,26 @@ import { AnimalForm } from '../../components/admin/AnimalForm';
 import { animalService } from '../../services/animalService';
 import { Animal } from '../../types';
 import toast from 'react-hot-toast';
+
+// Helper function to get appropriate animal images
+const getRandomAnimalImage = (category: string): string => {
+  const animalImages: { [key: string]: string } = {
+    'mammal': '1578662995465-a23e8b835052', // Lion
+    'Mammals': '1578662995465-a23e8b835052',
+    'bird': '1559827260-dc66d52bef19', // Eagle
+    'Birds': '1559827260-dc66d52bef19',
+    'reptile': '1559827260-dc66d52bef19', // Snake
+    'Reptiles': '1559827260-dc66d52bef19',
+    'fish': '1559827260-dc66d52bef19', // Fish
+    'Fish': '1559827260-dc66d52bef19',
+    'amphibian': '1559827260-dc66d52bef19', // Frog
+    'Amphibians': '1559827260-dc66d52bef19',
+    'invertebrate': '1559827260-dc66d52bef19', // Butterfly
+    'Invertebrates': '1559827260-dc66d52bef19',
+  };
+  
+  return animalImages[category] || '1559827260-dc66d52bef19'; // Default to eagle
+};
 
 export const AnimalManagement: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -167,91 +187,86 @@ export const AnimalManagement: React.FC = () => {
             </div>
           </Card>
 
-          {/* Animals Table */}
-          <Card padding="none">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Animal
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Species
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Type
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Age
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredAnimals.map((animal) => (
-                    <tr key={animal.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <img
-                            src={animal.imageUrl || 'https://via.placeholder.com/50'}
-                            alt={animal.name}
-                            className="w-10 h-10 rounded-full object-cover"
-                          />
-                          <span className="ml-3 font-medium text-gray-900 dark:text-white">
-                            {animal.name}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400 italic">
+          {/* Animals Grid - Card Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+            {filteredAnimals.map((animal) => (
+              <Card key={animal.id} padding="lg" hover className="transition-all duration-200">
+                <div className="flex items-start justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <img
+                      src={animal.imageUrl || `https://images.unsplash.com/photo-${getRandomAnimalImage(animal.category)}?w=60&h=60&fit=crop&crop=center`}
+                      alt={animal.name}
+                      className="w-12 h-12 rounded-lg object-cover border-2 border-gray-200 dark:border-gray-700"
+                      onError={(e) => {
+                        e.currentTarget.src = `https://images.unsplash.com/photo-${getRandomAnimalImage(animal.category)}?w=60&h=60&fit=crop&crop=center`;
+                      }}
+                    />
+                    <div>
+                      <h3 className="font-semibold text-lg text-gray-900 dark:text-white leading-tight">
+                        {animal.name}
+                      </h3>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 italic">
                         {animal.species}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400">
-                        {animal.category}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-600 dark:text-gray-400">
-                        {animal.age || 'N/A'} {animal.age ? 'years' : ''}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
-                          {animal.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right space-x-2">
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleViewAnimal(animal)}
-                        >
-                          <Eye size={16} />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          onClick={() => handleEditAnimal(animal)}
-                        >
-                          <Edit size={16} />
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          size="sm"
-                          className="text-red-600 hover:text-red-700"
-                          onClick={() => handleDelete(animal.id)}
-                        >
-                          <Trash2 size={16} />
-                        </Button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </Card>
+                      </p>
+                    </div>
+                  </div>
+                  <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                    {animal.status}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+                  <div>
+                    <span className="text-gray-500 dark:text-gray-400">Type:</span>
+                    <p className="font-medium text-gray-900 dark:text-white">{animal.category}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 dark:text-gray-400">Age:</span>
+                    <p className="font-medium text-gray-900 dark:text-white">
+                      {animal.age || 'N/A'} {animal.age ? 'years' : ''}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-2 pt-3 border-t border-gray-200 dark:border-gray-700">
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => handleViewAnimal(animal)}
+                    className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                  >
+                    <Eye size={16} />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    onClick={() => handleEditAnimal(animal)}
+                    className="text-green-600 hover:text-green-700 hover:bg-green-50 dark:hover:bg-green-900/20"
+                  >
+                    <Edit size={16} />
+                  </Button>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    onClick={() => handleDelete(animal.id)}
+                  >
+                    <Trash2 size={16} />
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {filteredAnimals.length === 0 && (
+            <Card padding="lg" className="text-center py-12">
+              <div className="text-gray-500 dark:text-gray-400">
+                <PawPrint size={48} className="mx-auto mb-4 opacity-50" />
+                <h3 className="text-lg font-medium mb-2">No animals found</h3>
+                <p className="text-sm">Try adjusting your search criteria or add a new animal.</p>
+              </div>
+            </Card>
+          )}
 
           {/* Modal */}
           <Modal
@@ -268,9 +283,12 @@ export const AnimalManagement: React.FC = () => {
               <div className="space-y-4">
                 <div className="flex items-center space-x-4">
                   <img
-                    src={selectedAnimal.imageUrl || 'https://via.placeholder.com/100'}
+                    src={selectedAnimal.imageUrl || `https://images.unsplash.com/photo-${getRandomAnimalImage(selectedAnimal.category)}?w=100&h=100&fit=crop&crop=center`}
                     alt={selectedAnimal.name}
                     className="w-16 h-16 rounded-lg object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = `https://images.unsplash.com/photo-${getRandomAnimalImage(selectedAnimal.category)}?w=100&h=100&fit=crop&crop=center`;
+                    }}
                   />
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">

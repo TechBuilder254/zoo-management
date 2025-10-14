@@ -1,38 +1,62 @@
-export type ReviewStatus = 'pending' | 'approved' | 'rejected' | 'PENDING' | 'APPROVED' | 'REJECTED';
+export type ReviewStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
 
 export interface Review {
   id: string;
-  _id?: string; // For backwards compatibility
-  animalId: string;
-  userId: string;
-  userName?: string;
   rating: number;
   comment: string;
   status: ReviewStatus;
-  helpful?: number;
-  // AI fields
   sentiment?: string;
-  sentimentScore?: number;
+  sentiment_score?: number;
   toxicity?: number;
-  createdAt: string;
-  updatedAt: string;
-  // Relations from backend
-  user?: {
+  user_id: string; // snake_case from Supabase
+  animal_id: string; // snake_case from Supabase
+  helpful: number;
+  created_at: string; // snake_case from Supabase
+  updated_at: string; // snake_case from Supabase
+  users?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  animals?: {
     id: string;
     name: string;
   };
+  // Compatibility fields (camelCase aliases)
+  _id?: string;
+  userId?: string; // alias for user_id
+  sentimentScore?: number; // alias for sentiment_score
+  createdAt?: string; // alias for created_at
+  user?: {
+    _id?: string;
+    id: string;
+    name: string;
+    email: string;
+  };
+  userName?: string;
   animal?: {
+    _id?: string;
     id: string;
     name: string;
   };
 }
 
 export interface ReviewFormData {
-  animalId: string;
   rating: number;
   comment: string;
+  animalId?: string;
 }
 
+export interface CreateReviewData {
+  rating: number;
+  comment: string;
+  animal_id: string;
+}
 
-
-
+export interface UpdateReviewData {
+  id: string;
+  status?: ReviewStatus;
+  sentiment?: string;
+  sentiment_score?: number;
+  toxicity?: number;
+}

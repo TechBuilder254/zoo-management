@@ -454,7 +454,7 @@ export const Home: React.FC = () => {
                 <div className="p-6">
                   <div className="flex items-center space-x-2 text-sm text-primary mb-2">
                     <Calendar size={16} />
-                    <span>{new Date(event.eventDate).toLocaleDateString('en-US', { 
+                    <span>{new Date(event.start_date || event.eventDate || '').toLocaleDateString('en-US', { 
                       month: 'short', 
                       day: 'numeric',
                       year: 'numeric'

@@ -41,7 +41,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
           <h3 className="text-xl font-bold text-gray-900 dark:text-white line-clamp-2">
             {event.title}
           </h3>
-          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(event.category)}`}>
+          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getCategoryColor(event.category || '')}`}>
             {event.category}
           </span>
         </div>
@@ -53,7 +53,7 @@ export const EventCard: React.FC<EventCardProps> = ({ event }) => {
         <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
           <div className="flex items-center space-x-2">
             <Calendar size={16} />
-            <span>{formatDate(event.eventDate)}</span>
+            <span>{formatDate(event.start_date || event.eventDate || '')}</span>
           </div>
           <div className="flex items-center space-x-2">
             <Clock size={16} />

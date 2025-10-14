@@ -142,7 +142,7 @@ export const BookingConfirmation: React.FC = () => {
     doc.setTextColor(lightGray);
     doc.text('Visit Date:', 20, yPos);
     doc.setTextColor(darkGray);
-    doc.text(new Date(booking.visitDate).toLocaleDateString('en-US', {
+    doc.text(new Date(booking.visit_date || booking.visitDate || '').toLocaleDateString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',

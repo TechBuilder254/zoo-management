@@ -3,14 +3,7 @@ import { ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-reac
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, isSameDay, isToday, addMonths, subMonths } from 'date-fns';
 import { Card } from '../common/Card';
 import { Button } from '../common/Button';
-
-interface Event {
-  _id: string;
-  title: string;
-  eventDate: Date | string;
-  startTime?: string;
-  category?: string;
-}
+import { Event } from '../../types';
 
 interface EventCalendarProps {
   events: Event[];
@@ -36,14 +29,18 @@ export const EventCalendar: React.FC<EventCalendarProps> = ({ events, onDateSele
 
   const hasEvents = (date: Date) => {
     return events.some(event => {
-      const eventDate = typeof event.eventDate === 'string' ? new Date(event.eventDate) : event.eventDate;
+      const dateStr = event.start_date || event.eventDate;
+      if (!dateStr) return false;
+      const eventDate = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
       return isSameDay(eventDate, date);
     });
   };
 
   const getEventsForDate = (date: Date) => {
     return events.filter(event => {
-      const eventDate = typeof event.eventDate === 'string' ? new Date(event.eventDate) : event.eventDate;
+      const dateStr = event.start_date || event.eventDate;
+      if (!dateStr) return false;
+      const eventDate = typeof dateStr === 'string' ? new Date(dateStr) : dateStr;
       return isSameDay(eventDate, date);
     });
   };
@@ -153,7 +150,7 @@ export const EventCalendar: React.FC<EventCalendarProps> = ({ events, onDateSele
           <div className="space-y-3">
             {selectedDateEvents.map(event => (
               <button
-                key={event._id}
+                key={event._id || event.id}
                 onClick={() => onEventClick?.(event)}
                 className="w-full text-left p-3 rounded-lg bg-primary-light dark:bg-gray-800 hover:bg-primary hover:text-white dark:hover:bg-primary transition-colors"
               >

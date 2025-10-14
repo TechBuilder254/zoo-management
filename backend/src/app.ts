@@ -15,6 +15,7 @@ import staffRoutes from './routes/staffRoutes';
 import statsRoutes from './routes/statsRoutes';
 import ticketRoutes from './routes/ticketRoutes';
 import promoRoutes from './routes/promoRoutes';
+import financialRoutes from './routes/financialRoutes';
 
 // Import middleware
 import { errorHandler, notFound } from './middleware/errorHandler';
@@ -45,6 +46,7 @@ app.use('/api/staff', staffRoutes);
 app.use('/api/stats', statsRoutes);
 app.use('/api/tickets', ticketRoutes);
 app.use('/api/promos', promoRoutes);
+app.use('/api/financial', financialRoutes);
 
 // Error handling
 app.use(notFound);

@@ -52,7 +52,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
               <span className="text-gray-700 dark:text-gray-300">Visit Date</span>
             </div>
             <span className="font-semibold text-gray-900 dark:text-white">
-              {formatDate(booking.visitDate)}
+              {formatDate(booking.visit_date || booking.visitDate || '')}
             </span>
           </div>
 
@@ -98,7 +98,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
             <div className="flex items-center justify-between py-2 pl-12">
               <span className="text-gray-600 dark:text-gray-400">{booking.ticketType} × {booking.quantity}</span>
               <span className="text-gray-900 dark:text-white">
-                {formatCurrency(booking.totalPrice)}
+                {formatCurrency(booking.total_price || booking.totalPrice || 0)}
               </span>
             </div>
           )}

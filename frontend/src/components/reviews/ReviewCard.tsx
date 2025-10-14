@@ -37,7 +37,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
                 {review.user?.name || review.userName || 'Anonymous User'}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {formatTimeAgo(review.createdAt)}
+                {formatTimeAgo(review.created_at || review.createdAt || '')}
               </p>
             </div>
           </div>
@@ -77,7 +77,7 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
         </div>
       )}
 
-      {(review.status === 'pending' || review.status === 'PENDING') && (
+      {review.status === 'PENDING' && (
         <div className="mt-3 inline-block px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
           Pending Approval
         </div>
