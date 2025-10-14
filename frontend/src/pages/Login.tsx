@@ -24,7 +24,17 @@ export const Login: React.FC = () => {
     setIsLoading(true);
     try {
       await login(data);
-      navigate('/');
+      // Check user role and redirect accordingly
+      // Use a small delay to ensure user state is updated
+      setTimeout(() => {
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        console.log('Login: Current user after login:', currentUser);
+        if (currentUser.role === 'ADMIN') {
+          navigate('/admin/dashboard');
+        } else {
+          navigate('/');
+        }
+      }, 100);
     } catch (error) {
       console.error('Login error:', error);
     } finally {

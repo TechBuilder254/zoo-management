@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { MapPin, Calendar, Scale, Info, ArrowLeft } from 'lucide-react';
+import { MapPin, Calendar, Info, ArrowLeft, Utensils } from 'lucide-react';
 import { useAnimal } from '../hooks/useAnimals';
 import { useAuth } from '../hooks/useAuth';
 import { reviewService } from '../services/reviewService';
@@ -27,21 +27,24 @@ export const AnimalDetail: React.FC = () => {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
 
   useEffect(() => {
-    if (id) {
+    if (animal) {
       loadReviews();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [animal]);
 
   const loadReviews = async () => {
-    if (!id) return;
+    const animalId = animal?.id || animal?._id || id;
+    if (!animalId) return;
     
     setReviewsLoading(true);
     try {
-      const data = await reviewService.getByAnimalId(id);
+      console.log('AnimalDetail: Loading reviews for animal ID:', animalId);
+      const data = await reviewService.getByAnimalId(animalId);
+      console.log('AnimalDetail: Fetched reviews:', data);
       setReviews(data);
     } catch (error) {
-      console.error('Failed to load reviews:', error);
+      console.error('AnimalDetail: Failed to load reviews:', error);
     } finally {
       setReviewsLoading(false);
     }
@@ -49,10 +52,13 @@ export const AnimalDetail: React.FC = () => {
 
   const handleReviewSubmit = async (data: any) => {
     try {
-      await reviewService.create(data);
+      console.log('Submitting review with data:', data);
+      const result = await reviewService.create(data);
+      console.log('Review submission result:', result);
       toast.success('Review submitted successfully!');
       await loadReviews();
     } catch (error) {
+      console.error('Review submission error:', error);
       toast.error('Failed to submit review');
       throw error;
     }
@@ -79,7 +85,13 @@ export const AnimalDetail: React.FC = () => {
     );
   }
 
-  const images = animal.photos.length > 0 ? animal.photos : [animal.mainPhoto];
+  const images = animal.photos && animal.photos.length > 0 
+    ? animal.photos 
+    : animal.imageUrl 
+    ? [animal.imageUrl] 
+    : animal.mainPhoto 
+    ? [animal.mainPhoto] 
+    : ['https://via.placeholder.com/800x600?text=Animal'];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
@@ -143,10 +155,19 @@ export const AnimalDetail: React.FC = () => {
             </div>
 
             <div className="flex items-center space-x-4 mb-6">
-              <RatingStars rating={animal.averageRating} size={24} />
-              <span className="text-gray-600 dark:text-gray-400">
-                ({animal.reviewCount} reviews)
-              </span>
+              {(() => {
+                const averageRating = reviews.length > 0 ? reviews.reduce((acc, review) => acc + review.rating, 0) / reviews.length : 0;
+                console.log('AnimalDetail: Reviews for rating calculation:', reviews);
+                console.log('AnimalDetail: Average rating:', averageRating);
+                return (
+                  <>
+                    <RatingStars rating={averageRating} size={24} />
+                    <span className="text-gray-600 dark:text-gray-400">
+                      ({reviews.length} reviews)
+                    </span>
+                  </>
+                );
+              })()}
             </div>
 
             <div className="space-y-4 mb-6">
@@ -155,8 +176,8 @@ export const AnimalDetail: React.FC = () => {
                   <Info size={20} className="text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Type</p>
-                  <p className="font-semibold text-gray-900 dark:text-white">{animal.type}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Category</p>
+                  <p className="font-semibold text-gray-900 dark:text-white">{animal.category || animal.type}</p>
                 </div>
               </div>
 
@@ -165,18 +186,18 @@ export const AnimalDetail: React.FC = () => {
                   <Calendar size={20} className="text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Age</p>
-                  <p className="font-semibold text-gray-900 dark:text-white">{animal.age} years</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Lifespan</p>
+                  <p className="font-semibold text-gray-900 dark:text-white">{animal.lifespan}</p>
                 </div>
               </div>
 
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-primary-light dark:bg-gray-700 rounded-full flex items-center justify-center">
-                  <Scale size={20} className="text-primary" />
+                  <Utensils size={20} className="text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">Weight</p>
-                  <p className="font-semibold text-gray-900 dark:text-white">{animal.weight} kg</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Diet</p>
+                  <p className="font-semibold text-gray-900 dark:text-white">{animal.diet}</p>
                 </div>
               </div>
 
@@ -186,7 +207,7 @@ export const AnimalDetail: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600 dark:text-gray-400">Habitat</p>
-                  <p className="font-semibold text-gray-900 dark:text-white">{animal.habitat.name}</p>
+                  <p className="font-semibold text-gray-900 dark:text-white">{typeof animal.habitat === 'string' ? animal.habitat : animal.habitat?.name}</p>
                 </div>
               </div>
             </div>
@@ -218,8 +239,8 @@ export const AnimalDetail: React.FC = () => {
             </Card>
 
             {/* Review Form */}
-            {isAuthenticated && (
-              <ReviewForm animalId={animal._id} onSubmit={handleReviewSubmit} />
+            {isAuthenticated && animal && (
+              <ReviewForm animalId={animal.id || animal._id || id!} onSubmit={handleReviewSubmit} />
             )}
           </div>
 
@@ -241,13 +262,13 @@ export const AnimalDetail: React.FC = () => {
               <p className="text-gray-700 dark:text-gray-300">{animal.diet}</p>
             </Card>
 
-            {animal.interestingFacts.length > 0 && (
+            {animal.interestingFacts && animal.interestingFacts.length > 0 && (
               <Card padding="lg">
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
                   Interesting Facts
                 </h3>
                 <ul className="space-y-2">
-                  {animal.interestingFacts.map((fact, index) => (
+                  {animal.interestingFacts?.map((fact, index) => (
                     <li key={index} className="flex items-start space-x-2">
                       <span className="text-primary mt-1">•</span>
                       <span className="text-gray-700 dark:text-gray-300">{fact}</span>
@@ -266,8 +287,8 @@ export const AnimalDetail: React.FC = () => {
         currentIndex={selectedImageIndex}
         isOpen={isLightboxOpen}
         onClose={() => setIsLightboxOpen(false)}
-        onNext={() => setSelectedImageIndex((prev) => (prev + 1) % images.length)}
-        onPrevious={() => setSelectedImageIndex((prev) => (prev - 1 + images.length) % images.length)}
+        onNext={() => setSelectedImageIndex((prev) => (prev + 1) % (images?.length || 1))}
+        onPrevious={() => setSelectedImageIndex((prev) => (prev - 1 + (images?.length || 1)) % (images?.length || 1))}
         title={animal.name}
       />
     </div>

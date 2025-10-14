@@ -17,19 +17,29 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ animalId, onSubmit }) =>
   const { register, handleSubmit, formState: { errors }, reset } = useForm<{ comment: string }>();
 
   const handleFormSubmit = async (data: { comment: string }) => {
+    console.log('ReviewForm: handleFormSubmit called with:', data);
+    console.log('ReviewForm: rating is:', rating);
+    
     if (rating === 0) {
+      console.log('ReviewForm: No rating selected, returning');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await onSubmit({
+      const reviewData = {
         animalId,
         rating,
         comment: data.comment,
-      });
+      };
+      console.log('ReviewForm: Submitting review data:', reviewData);
+      await onSubmit(reviewData);
+      console.log('ReviewForm: Review submitted successfully');
       reset();
       setRating(0);
+    } catch (error) {
+      console.error('ReviewForm: Error submitting review:', error);
+      throw error;
     } finally {
       setIsSubmitting(false);
     }

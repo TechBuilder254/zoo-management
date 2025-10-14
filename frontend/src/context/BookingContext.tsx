@@ -1,6 +1,7 @@
-import React, { createContext, useState, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { Tickets, TicketPrices } from '../types';
 import { TICKET_PRICES } from '../utils/constants';
+import { ticketService, TicketPrice } from '../services/ticketService';
 
 interface BookingContextType {
   visitDate: Date | null;
@@ -28,6 +29,41 @@ const initialTickets: Tickets = {
 export const BookingProvider: React.FC<BookingProviderProps> = ({ children }) => {
   const [visitDate, setVisitDate] = useState<Date | null>(null);
   const [tickets, setTickets] = useState<Tickets>(initialTickets);
+  const [ticketPrices, setTicketPrices] = useState<TicketPrices>(TICKET_PRICES);
+
+  // Fetch ticket prices from backend on mount
+  useEffect(() => {
+    const fetchTicketPrices = async () => {
+      try {
+        const prices = await ticketService.getAll();
+        const priceMap: TicketPrices = {
+          adult: TICKET_PRICES.adult,
+          child: TICKET_PRICES.child,
+          senior: TICKET_PRICES.senior,
+        };
+        
+        prices.forEach((price: TicketPrice) => {
+          if (price.ticketType === 'adult') priceMap.adult = price.price;
+          if (price.ticketType === 'child') priceMap.child = price.price;
+          if (price.ticketType === 'senior') priceMap.senior = price.price;
+        });
+        
+        setTicketPrices(priceMap);
+        
+        // Update ticket prices in state
+        setTickets(prev => ({
+          adult: { ...prev.adult, price: priceMap.adult },
+          child: { ...prev.child, price: priceMap.child },
+          senior: { ...prev.senior, price: priceMap.senior },
+        }));
+      } catch (error) {
+        console.error('Failed to fetch ticket prices:', error);
+        // Keep using default prices if fetch fails
+      }
+    };
+
+    fetchTicketPrices();
+  }, []);
 
   const updateTickets = (type: keyof Tickets, quantity: number): void => {
     setTickets((prev) => ({
@@ -59,7 +95,7 @@ export const BookingProvider: React.FC<BookingProviderProps> = ({ children }) =>
   const value: BookingContextType = {
     visitDate,
     tickets,
-    ticketPrices: TICKET_PRICES,
+    ticketPrices,
     setVisitDate,
     updateTickets,
     resetBooking,

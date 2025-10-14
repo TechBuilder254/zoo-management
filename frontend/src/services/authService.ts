@@ -19,13 +19,13 @@ export const authService = {
   },
 
   logout: async (): Promise<void> => {
-    await api.post('/auth/logout');
+    // Backend doesn't need logout endpoint (JWT is stateless)
     localStorage.removeItem('token');
     localStorage.removeItem('user');
   },
 
   getCurrentUser: async (): Promise<User> => {
-    const response = await api.get<User>('/auth/me');
+    const response = await api.get<User>('/auth/profile');
     return response.data;
   },
 

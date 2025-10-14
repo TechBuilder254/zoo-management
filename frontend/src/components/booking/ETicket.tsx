@@ -9,10 +9,9 @@ interface ETicketProps {
 }
 
 export const ETicket: React.FC<ETicketProps> = ({ booking }) => {
-  const totalTickets =
-    booking.tickets.adult.quantity +
-    booking.tickets.child.quantity +
-    booking.tickets.senior.quantity;
+  const totalTickets = booking.tickets
+    ? booking.tickets.adult.quantity + booking.tickets.child.quantity + booking.tickets.senior.quantity
+    : booking.quantity || 0;
 
   return (
     <div className="bg-white p-8 max-w-2xl mx-auto" id="e-ticket">
@@ -36,7 +35,7 @@ export const ETicket: React.FC<ETicketProps> = ({ booking }) => {
       {/* QR Code Section */}
       <div className="flex justify-center mb-6">
         <div className="border-4 border-gray-300 p-4 rounded-lg">
-          <QRCodeSVG value={booking.bookingReference} size={180} />
+          <QRCodeSVG value={booking.bookingReference || booking.id || 'N/A'} size={180} />
         </div>
       </div>
 
@@ -55,27 +54,36 @@ export const ETicket: React.FC<ETicketProps> = ({ booking }) => {
 
         {/* Ticket Breakdown */}
         <div className="bg-gray-50 rounded-lg p-4 space-y-2">
-          {booking.tickets.adult.quantity > 0 && (
+          {booking.tickets ? (
+            <>
+              {booking.tickets.adult.quantity > 0 && (
+                <div className="flex justify-between">
+                  <span>Adult × {booking.tickets.adult.quantity}</span>
+                  <span>{formatCurrency(booking.tickets.adult.price * booking.tickets.adult.quantity)}</span>
+                </div>
+              )}
+              {booking.tickets.child.quantity > 0 && (
+                <div className="flex justify-between">
+                  <span>Child × {booking.tickets.child.quantity}</span>
+                  <span>{formatCurrency(booking.tickets.child.price * booking.tickets.child.quantity)}</span>
+                </div>
+              )}
+              {booking.tickets.senior.quantity > 0 && (
+                <div className="flex justify-between">
+                  <span>Senior × {booking.tickets.senior.quantity}</span>
+                  <span>{formatCurrency(booking.tickets.senior.price * booking.tickets.senior.quantity)}</span>
+                </div>
+              )}
+            </>
+          ) : (
             <div className="flex justify-between">
-              <span>Adult × {booking.tickets.adult.quantity}</span>
-              <span>{formatCurrency(booking.tickets.adult.price * booking.tickets.adult.quantity)}</span>
-            </div>
-          )}
-          {booking.tickets.child.quantity > 0 && (
-            <div className="flex justify-between">
-              <span>Child × {booking.tickets.child.quantity}</span>
-              <span>{formatCurrency(booking.tickets.child.price * booking.tickets.child.quantity)}</span>
-            </div>
-          )}
-          {booking.tickets.senior.quantity > 0 && (
-            <div className="flex justify-between">
-              <span>Senior × {booking.tickets.senior.quantity}</span>
-              <span>{formatCurrency(booking.tickets.senior.price * booking.tickets.senior.quantity)}</span>
+              <span>{booking.ticketType} × {booking.quantity}</span>
+              <span>{formatCurrency(booking.totalPrice)}</span>
             </div>
           )}
           <div className="border-t-2 border-gray-300 pt-2 mt-2 flex justify-between font-bold text-lg">
             <span>Total Amount</span>
-            <span className="text-primary">{formatCurrency(booking.totalAmount)}</span>
+            <span className="text-primary">{formatCurrency(booking.totalPrice || booking.totalAmount || 0)}</span>
           </div>
         </div>
       </div>

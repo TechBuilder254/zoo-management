@@ -4,6 +4,7 @@ import { Tag, Users, TrendingDown } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { useBooking } from '../hooks/useBooking';
 import { bookingService } from '../services/bookingService';
+import { promoService } from '../services/promoService';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
@@ -19,8 +20,8 @@ export const Booking: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [promoCode, setPromoCode] = useState('');
   const [isApplyingPromo, setIsApplyingPromo] = useState(false);
-  const [discount, setDiscount] = useState(0);
   const [promoApplied, setPromoApplied] = useState(false);
+  const [promoData, setPromoData] = useState<any>(null);
 
   if (!isAuthenticated) {
     return (
@@ -50,7 +51,7 @@ export const Booking: React.FC = () => {
   
   // Calculate final amount
   const subtotal = totalAmount - groupDiscount;
-  const promoDiscount = promoApplied ? (subtotal * discount) / 100 : 0;
+  const promoDiscount = promoApplied && promoData ? promoData.discountAmount : 0;
   const finalAmount = subtotal - promoDiscount;
 
   const handleApplyPromo = async () => {
@@ -61,27 +62,19 @@ export const Booking: React.FC = () => {
 
     setIsApplyingPromo(true);
     try {
-      // Simulate API call to validate promo code
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await promoService.validate(promoCode.toUpperCase(), subtotal);
       
-      // Mock promo codes for demo
-      const validPromoCodes: { [key: string]: number } = {
-        'WILDLIFE10': 10,
-        'FAMILY15': 15,
-        'SUMMER20': 20,
-        'WELCOME5': 5,
-      };
-
-      const upperPromoCode = promoCode.toUpperCase();
-      if (validPromoCodes[upperPromoCode]) {
-        setDiscount(validPromoCodes[upperPromoCode]);
+      if (response.valid) {
+        setPromoData(response);
         setPromoApplied(true);
-        toast.success(`Promo code applied! ${validPromoCodes[upperPromoCode]}% discount`);
+        toast.success(`Promo code applied! ${response.promoCode?.discountType === 'PERCENTAGE' ? `${response.promoCode.discountValue}%` : formatCurrency(response.promoCode?.discountValue || 0)} discount`);
       } else {
-        toast.error('Invalid promo code');
+        toast.error('Invalid or expired promo code');
       }
-    } catch (error) {
-      toast.error('Failed to apply promo code');
+    } catch (error: any) {
+      console.error('Promo validation error:', error);
+      const errorMessage = error.response?.data?.error || 'Failed to validate promo code';
+      toast.error(errorMessage);
     } finally {
       setIsApplyingPromo(false);
     }
@@ -89,8 +82,8 @@ export const Booking: React.FC = () => {
 
   const handleRemovePromo = () => {
     setPromoCode('');
-    setDiscount(0);
     setPromoApplied(false);
+    setPromoData(null);
     toast.success('Promo code removed');
   };
 
@@ -110,7 +103,8 @@ export const Booking: React.FC = () => {
       const bookingData = {
         visitDate: visitDate.toISOString(),
         tickets,
-        promoCode: promoApplied ? promoCode : undefined,
+        promoCode: promoApplied ? promoData?.promoCode?.id : undefined,
+        discountAmount: promoApplied ? promoData?.discountAmount : 0,
       };
       
       const booking = await bookingService.create(bookingData);
@@ -314,12 +308,12 @@ export const Booking: React.FC = () => {
                     <div className="flex justify-between items-center text-sm">
                       <p className="text-green-600 dark:text-green-400 flex items-center">
                         <Tag size={14} className="mr-1" />
-                        Promo Discount ({discount}%)
+                        Promo Discount ({promoData?.promoCode?.discountType === 'PERCENTAGE' ? `${promoData.promoCode.discountValue}%` : formatCurrency(promoData?.promoCode?.discountValue || 0)})
                       </p>
                       <p className="text-green-600 dark:text-green-400">
                         -{formatCurrency(promoDiscount)}
-                    </p>
-                  </div>
+                      </p>
+                    </div>
                   )}
 
                   <div className="flex justify-between items-center pt-2 border-t dark:border-gray-700">

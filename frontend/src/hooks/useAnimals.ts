@@ -29,6 +29,7 @@ export const useAnimals = (filters?: AnimalFilters) => {
     };
 
     fetchAnimals();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters?.search, filters?.type, filters?.conservationStatus, filters?.sortBy, filters?.page]);
 
   return { animals, loading, error, total, totalPages };

@@ -1,5 +1,5 @@
 export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
-export type BookingStatus = 'upcoming' | 'completed' | 'cancelled';
+export type BookingStatus = 'upcoming' | 'completed' | 'cancelled' | 'pending' | 'confirmed' | 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
 
 export interface TicketType {
   quantity: number;
@@ -13,20 +13,30 @@ export interface Tickets {
 }
 
 export interface Booking {
-  _id: string;
-  bookingReference: string;
+  id: string;
+  _id?: string; // For backwards compatibility
   userId: string;
   visitDate: string;
-  tickets: Tickets;
-  totalAmount: number;
-  paymentStatus: PaymentStatus;
-  paymentId?: string;
-  qrCode: string;
+  ticketType: string;
+  quantity: number;
+  totalPrice: number;
   status: BookingStatus;
-  ticketUsed: boolean;
-  usedAt?: string;
+  paymentId?: string;
+  paymentStatus?: string;
   createdAt: string;
   updatedAt: string;
+  // Legacy fields
+  bookingReference?: string;
+  tickets?: Tickets;
+  totalAmount?: number;
+  qrCode?: string;
+  ticketUsed?: boolean;
+  usedAt?: string;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+  };
 }
 
 export interface BookingFormData {

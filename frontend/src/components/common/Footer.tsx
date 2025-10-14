@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Facebook, Twitter, Instagram, Mail, Phone, MapPin } from 'lucide-react';
 import { Button } from './Button';
 import { Input } from './Input';
+import { Container } from './Container';
 import { newsletterService } from '../../services/newsletterService';
 import toast from 'react-hot-toast';
 
@@ -35,7 +36,7 @@ export const Footer: React.FC = () => {
 
   return (
     <footer className="bg-gray-900 text-gray-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <Container className="py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* About Section */}
           <div>
@@ -161,7 +162,7 @@ export const Footer: React.FC = () => {
             &copy; {currentYear} Wildlife Zoo Management System. All rights reserved.
           </p>
         </div>
-      </div>
+      </Container>
     </footer>
   );
 };

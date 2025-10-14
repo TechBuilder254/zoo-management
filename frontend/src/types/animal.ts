@@ -20,27 +20,41 @@ export interface Habitat {
 }
 
 export interface Animal {
-  _id: string;
+  // Backend fields (primary)
+  id: string;
   name: string;
   species: string;
-  commonName?: string;
-  type: AnimalType;
-  age: number;
-  sex: AnimalSex;
-  weight: number;
-  photos: string[];
-  mainPhoto: string;
+  category: string;
+  habitat: string | Habitat;
   description: string;
-  history: string;
-  conservationStatus: ConservationStatus;
+  imageUrl: string;
+  image_url?: string; // Supabase format
   diet: string;
-  interestingFacts: string[];
-  habitat: Habitat;
-  averageRating: number;
-  reviewCount: number;
-  viewCount: number;
+  lifespan: string;
+  status: string;
+  location?: any;
   createdAt: string;
+  created_at?: string; // Supabase format
   updatedAt: string;
+  updated_at?: string; // Supabase format
+  _count?: {
+    reviews: number;
+    favorites: number;
+  };
+  // Legacy fields for compatibility
+  _id?: string;
+  type?: AnimalType;
+  mainPhoto?: string;
+  photos?: string[];
+  age?: number;
+  sex?: AnimalSex;
+  weight?: number;
+  history?: string;
+  conservationStatus?: ConservationStatus;
+  interestingFacts?: string[];
+  averageRating?: number;
+  reviewCount?: number;
+  viewCount?: number;
 }
 
 export interface AnimalFormData {

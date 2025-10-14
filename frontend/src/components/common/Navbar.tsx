@@ -4,6 +4,8 @@ import { Menu, X, User, Heart, Calendar, LogOut, LayoutDashboard } from 'lucide-
 import { useAuth } from '../../hooks/useAuth';
 import { ThemeToggle } from './ThemeToggle';
 import { Button } from './Button';
+import { Container } from './Container';
+import { saveScrollPosition } from './ScrollToTop';
 
 export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -22,12 +24,17 @@ export const Navbar: React.FC = () => {
     { to: '/booking', label: 'Book Tickets' },
   ];
 
+  const handleNavClick = () => {
+    // Save current scroll position before navigating to a new page
+    saveScrollPosition(window.location.pathname + window.location.search);
+  };
+
   return (
     <nav className="sticky top-0 z-40 bg-white dark:bg-gray-900 shadow-md">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <Container>
         <div className="flex justify-between items-center h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center space-x-2">
+          <Link to="/" onClick={handleNavClick} className="flex items-center space-x-2">
             <span className="text-2xl">🦁</span>
             <span className="text-xl font-bold text-primary dark:text-primary-light">
               Wildlife Zoo
@@ -40,6 +47,7 @@ export const Navbar: React.FC = () => {
               <Link
                 key={link.to}
                 to={link.to}
+                onClick={handleNavClick}
                 className="text-gray-700 dark:text-gray-300 hover:text-primary dark:hover:text-primary-light transition-colors font-medium"
               >
                 {link.label}
@@ -117,7 +125,10 @@ export const Navbar: React.FC = () => {
                   key={link.to}
                   to={link.to}
                   className="px-4 py-2 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => {
+                    handleNavClick();
+                    setIsMenuOpen(false);
+                  }}
                 >
                   {link.label}
                 </Link>
@@ -180,7 +191,7 @@ export const Navbar: React.FC = () => {
             </div>
           </div>
         )}
-      </div>
+      </Container>
     </nav>
   );
 };

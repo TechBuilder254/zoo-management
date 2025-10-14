@@ -16,10 +16,9 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
   booking,
   onDownload,
 }) => {
-  const totalTickets =
-    booking.tickets.adult.quantity +
-    booking.tickets.child.quantity +
-    booking.tickets.senior.quantity;
+  const totalTickets = booking.tickets
+    ? booking.tickets.adult.quantity + booking.tickets.child.quantity + booking.tickets.senior.quantity
+    : booking.quantity || 0;
 
   return (
     <div className="max-w-2xl mx-auto">
@@ -68,27 +67,38 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
           </div>
 
           {/* Ticket Breakdown */}
-          {booking.tickets.adult.quantity > 0 && (
+          {booking.tickets ? (
+            <>
+              {booking.tickets.adult.quantity > 0 && (
+                <div className="flex items-center justify-between py-2 pl-12">
+                  <span className="text-gray-600 dark:text-gray-400">Adult × {booking.tickets.adult.quantity}</span>
+                  <span className="text-gray-900 dark:text-white">
+                    {formatCurrency(booking.tickets.adult.price * booking.tickets.adult.quantity)}
+                  </span>
+                </div>
+              )}
+              {booking.tickets.child.quantity > 0 && (
+                <div className="flex items-center justify-between py-2 pl-12">
+                  <span className="text-gray-600 dark:text-gray-400">Child × {booking.tickets.child.quantity}</span>
+                  <span className="text-gray-900 dark:text-white">
+                    {formatCurrency(booking.tickets.child.price * booking.tickets.child.quantity)}
+                  </span>
+                </div>
+              )}
+              {booking.tickets.senior.quantity > 0 && (
+                <div className="flex items-center justify-between py-2 pl-12">
+                  <span className="text-gray-600 dark:text-gray-400">Senior × {booking.tickets.senior.quantity}</span>
+                  <span className="text-gray-900 dark:text-white">
+                    {formatCurrency(booking.tickets.senior.price * booking.tickets.senior.quantity)}
+                  </span>
+                </div>
+              )}
+            </>
+          ) : (
             <div className="flex items-center justify-between py-2 pl-12">
-              <span className="text-gray-600 dark:text-gray-400">Adult × {booking.tickets.adult.quantity}</span>
+              <span className="text-gray-600 dark:text-gray-400">{booking.ticketType} × {booking.quantity}</span>
               <span className="text-gray-900 dark:text-white">
-                {formatCurrency(booking.tickets.adult.price * booking.tickets.adult.quantity)}
-              </span>
-            </div>
-          )}
-          {booking.tickets.child.quantity > 0 && (
-            <div className="flex items-center justify-between py-2 pl-12">
-              <span className="text-gray-600 dark:text-gray-400">Child × {booking.tickets.child.quantity}</span>
-              <span className="text-gray-900 dark:text-white">
-                {formatCurrency(booking.tickets.child.price * booking.tickets.child.quantity)}
-              </span>
-            </div>
-          )}
-          {booking.tickets.senior.quantity > 0 && (
-            <div className="flex items-center justify-between py-2 pl-12">
-              <span className="text-gray-600 dark:text-gray-400">Senior × {booking.tickets.senior.quantity}</span>
-              <span className="text-gray-900 dark:text-white">
-                {formatCurrency(booking.tickets.senior.price * booking.tickets.senior.quantity)}
+                {formatCurrency(booking.totalPrice)}
               </span>
             </div>
           )}
@@ -96,7 +106,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
           <div className="flex items-center justify-between py-3 border-t-2 border-gray-300 dark:border-gray-600">
             <span className="text-lg font-semibold text-gray-900 dark:text-white">Total Amount</span>
             <span className="text-2xl font-bold text-primary">
-              {formatCurrency(booking.totalAmount)}
+              {formatCurrency(booking.totalPrice || booking.totalAmount || 0)}
             </span>
           </div>
         </div>
@@ -107,7 +117,7 @@ export const BookingConfirmation: React.FC<BookingConfirmationProps> = ({
             Show this QR code at the entrance
           </p>
           <div className="inline-block bg-white p-4 rounded-lg">
-            <QRCodeSVG value={booking.bookingReference} size={200} />
+            <QRCodeSVG value={booking.bookingReference || booking.id || 'N/A'} size={200} />
           </div>
         </div>
 

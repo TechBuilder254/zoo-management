@@ -1,0 +1,215 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String     @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email      String     @unique
+  password   String
+  name       String
+  role       Role       @default(VISITOR)
+  created_at DateTime?  @default(now()) @db.Timestamptz(6)
+  updated_at DateTime?  @default(now()) @db.Timestamptz(6)
+  bookings   Booking[]
+  favorites  Favorite[]
+  reviews    Review[]
+
+  @@map("users")
+}
+
+model Animal {
+  id             String         @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  name           String
+  species        String
+  category       String
+  habitat        String
+  description    String
+  image_url      String?
+  diet           String?
+  lifespan       String?
+  status         AnimalStatus   @default(ACTIVE)
+  location       Json?
+  created_at     DateTime?      @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime?      @default(now()) @db.Timestamptz(6)
+  favorites      Favorite[]
+  health_records HealthRecord[]
+  reviews        Review[]
+
+  @@index([category], map: "idx_animals_category")
+  @@index([status], map: "idx_animals_status")
+  @@map("animals")
+}
+
+model Review {
+  id              String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  rating          Int
+  comment         String
+  status          ReviewStatus @default(PENDING)
+  sentiment       String?
+  sentiment_score Float?
+  toxicity        Float?
+  user_id         String       @db.Uuid
+  animal_id       String       @db.Uuid
+  helpful         Int          @default(0)
+  created_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?    @default(now()) @db.Timestamptz(6)
+  animals         Animal       @relation(fields: [animal_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users           User         @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([animal_id], map: "idx_reviews_animal_id")
+  @@index([status], map: "idx_reviews_status")
+  @@index([user_id], map: "idx_reviews_user_id")
+  @@map("reviews")
+}
+
+model Booking {
+  id              String        @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  visit_date      DateTime      @db.Timestamptz(6)
+  ticket_type     String
+  quantity        Int
+  total_price     Float
+  status          BookingStatus @default(PENDING)
+  payment_id      String?
+  payment_status  String?
+  promo_code_id   String?       @db.Uuid
+  discount_amount Float         @default(0)
+  user_id         String        @db.Uuid
+  created_at      DateTime?     @default(now()) @db.Timestamptz(6)
+  updated_at      DateTime?     @default(now()) @db.Timestamptz(6)
+  promo_codes     PromoCode?    @relation(fields: [promo_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users           User          @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@index([status], map: "idx_bookings_status")
+  @@index([user_id], map: "idx_bookings_user_id")
+  @@index([visit_date], map: "idx_bookings_visit_date")
+  @@map("bookings")
+}
+
+model Event {
+  id          String      @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  title       String
+  description String
+  start_date  DateTime    @db.Timestamptz(6)
+  end_date    DateTime    @db.Timestamptz(6)
+  location    String
+  image_url   String?
+  capacity    Int?
+  price       Float?
+  status      EventStatus @default(UPCOMING)
+  created_at  DateTime?   @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime?   @default(now()) @db.Timestamptz(6)
+
+  @@index([start_date], map: "idx_events_start_date")
+  @@index([status], map: "idx_events_status")
+  @@map("events")
+}
+
+model Favorite {
+  id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  user_id    String    @db.Uuid
+  animal_id  String    @db.Uuid
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+  animals    Animal    @relation(fields: [animal_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  users      User      @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([user_id, animal_id])
+  @@index([animal_id], map: "idx_favorites_animal_id")
+  @@index([user_id], map: "idx_favorites_user_id")
+  @@map("favorites")
+}
+
+model HealthRecord {
+  id           String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  checkup_date DateTime? @default(now()) @db.Timestamptz(6)
+  diagnosis    String
+  treatment    String?
+  vet_name     String
+  notes        String?
+  animal_id    String    @db.Uuid
+  created_at   DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at   DateTime? @default(now()) @db.Timestamptz(6)
+  animals      Animal    @relation(fields: [animal_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@map("health_records")
+}
+
+model Newsletter {
+  id         String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  email      String    @unique
+  is_active  Boolean   @default(true)
+  created_at DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@map("newsletters")
+}
+
+model TicketPrice {
+  id          String    @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  ticket_type String    @unique
+  price       Float
+  description String?
+  is_active   Boolean   @default(true)
+  created_at  DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at  DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@map("ticket_prices")
+}
+
+model PromoCode {
+  id             String       @id @default(dbgenerated("uuid_generate_v4()")) @db.Uuid
+  code           String       @unique
+  description    String?
+  discount_type  DiscountType
+  discount_value Float
+  max_uses       Int?
+  used_count     Int          @default(0)
+  is_active      Boolean      @default(true)
+  valid_from     DateTime     @db.Timestamptz(6)
+  valid_until    DateTime     @db.Timestamptz(6)
+  created_at     DateTime?    @default(now()) @db.Timestamptz(6)
+  updated_at     DateTime?    @default(now()) @db.Timestamptz(6)
+  bookings       Booking[]
+
+  @@map("promo_codes")
+}
+
+enum Role {
+  VISITOR
+  ADMIN
+  STAFF
+}
+
+enum AnimalStatus {
+  ACTIVE
+  INACTIVE
+  UNDER_CARE
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum EventStatus {
+  UPCOMING
+  ONGOING
+  COMPLETED
+  CANCELLED
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}

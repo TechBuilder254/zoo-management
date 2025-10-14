@@ -3,18 +3,18 @@ export const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY || 
 export const STRIPE_PUBLIC_KEY = process.env.REACT_APP_STRIPE_PUBLIC_KEY || '';
 
 export const TICKET_PRICES = {
-  adult: 25.00,
-  child: 12.00,
-  senior: 18.00,
+  adult: 1500, // KSh
+  child: 750,  // KSh
+  senior: 1000, // KSh
 };
 
 export const ANIMAL_TYPES = [
-  'Mammal',
-  'Bird',
-  'Reptile',
-  'Amphibian',
+  'Mammals',
+  'Birds',
+  'Reptiles',
+  'Amphibians',
   'Fish',
-  'Invertebrate',
+  'Invertebrates',
 ] as const;
 
 export const CONSERVATION_STATUSES = [
@@ -52,6 +52,8 @@ export const ROUTES = {
   ADMIN_ANIMALS: '/admin/animals',
   ADMIN_BOOKINGS: '/admin/bookings',
   ADMIN_REVIEWS: '/admin/reviews',
+  ADMIN_TICKET_PRICING: '/admin/ticket-pricing',
+  ADMIN_PROMO_CODES: '/admin/promo-codes',
 } as const;
 
 

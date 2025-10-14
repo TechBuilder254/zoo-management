@@ -1,6 +1,5 @@
 import api from './api';
 import { Animal, AnimalFormData, AnimalType, ConservationStatus } from '../types';
-import { mockAnimals, searchAnimals } from '../data/mockAnimals';
 
 export interface AnimalFilters {
   search?: string;
@@ -20,77 +19,32 @@ export interface AnimalsResponse {
 
 export const animalService = {
   getAll: async (filters?: AnimalFilters): Promise<AnimalsResponse> => {
-    // Use mock data instead of API call for demonstration
-    let filteredAnimals = [...mockAnimals];
+    const params = new URLSearchParams();
+    if (filters?.search) params.append('search', filters.search);
+    if (filters?.type) params.append('category', filters.type);
+    if (filters?.page) params.append('page', filters.page.toString());
+    if (filters?.limit) params.append('limit', filters.limit.toString());
 
-    // Apply filters
-    if (filters?.search) {
-      filteredAnimals = searchAnimals(filters.search);
-    }
-
-    if (filters?.type) {
-      filteredAnimals = filteredAnimals.filter(animal => animal.type === filters.type);
-    }
-
-    if (filters?.conservationStatus) {
-      filteredAnimals = filteredAnimals.filter(animal => animal.conservationStatus === filters.conservationStatus);
-    }
-
-    // Apply sorting
-    if (filters?.sortBy) {
-      switch (filters.sortBy) {
-        case 'name':
-          filteredAnimals.sort((a, b) => a.name.localeCompare(b.name));
-          break;
-        case 'age':
-          filteredAnimals.sort((a, b) => b.age - a.age);
-          break;
-        case 'popularity':
-          filteredAnimals.sort((a, b) => b.averageRating - a.averageRating);
-          break;
-      }
-    }
-
-    // Apply pagination
-    const page = filters?.page || 1;
-    const limit = filters?.limit || 12;
-    const startIndex = (page - 1) * limit;
-    const endIndex = startIndex + limit;
-    const paginatedAnimals = filteredAnimals.slice(startIndex, endIndex);
-
+    const response = await api.get<Animal[]>(`/animals?${params.toString()}`);
+    const animals = response.data;
+    
     return {
-      animals: paginatedAnimals,
-      total: filteredAnimals.length,
-      page: page,
-      totalPages: Math.ceil(filteredAnimals.length / limit)
+      animals,
+      total: animals.length,
+      page: filters?.page || 1,
+      totalPages: Math.ceil(animals.length / (filters?.limit || 12))
     };
   },
 
   getById: async (id: string): Promise<Animal> => {
-    // Use mock data instead of API call for demonstration
-    const animal = mockAnimals.find(a => a._id === id);
-    if (!animal) {
-      throw new Error('Animal not found');
-    }
-    return animal;
+    const response = await api.get<Animal>(`/animals/${id}`);
+    return response.data;
   },
 
-  create: async (data: AnimalFormData, photos: File[]): Promise<Animal> => {
-    const formData = new FormData();
-    Object.entries(data).forEach(([key, value]) => {
-      if (key === 'interestingFacts' || key === 'habitat') {
-        formData.append(key, JSON.stringify(value));
-      } else {
-        formData.append(key, String(value));
-      }
-    });
-    photos.forEach((photo) => {
-      formData.append('photos', photo);
-    });
-    
-    const response = await api.post<Animal>('/animals', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+  create: async (data: AnimalFormData, _photos?: File[]): Promise<Animal> => {
+    // For now, send as JSON instead of FormData since we're not handling file uploads yet
+    // The _photos parameter is prefixed with _ to indicate it's intentionally unused
+    const response = await api.post<Animal>('/animals', data);
     return response.data;
   },
 
@@ -104,8 +58,8 @@ export const animalService = {
   },
 
   search: async (query: string): Promise<Animal[]> => {
-    // Use mock data instead of API call for demonstration
-    return searchAnimals(query);
+    const response = await api.get<Animal[]>(`/animals?search=${query}`);
+    return response.data;
   },
 
   addToFavorites: async (animalId: string): Promise<void> => {
@@ -113,11 +67,11 @@ export const animalService = {
   },
 
   removeFromFavorites: async (animalId: string): Promise<void> => {
-    await api.delete(`/animals/${animalId}/favorite`);
+    await api.post(`/animals/${animalId}/favorite`);
   },
 
   getFavorites: async (): Promise<Animal[]> => {
-    const response = await api.get<Animal[]>('/animals/favorites');
+    const response = await api.get<Animal[]>('/animals/user/favorites');
     return response.data;
   },
 };

@@ -26,7 +26,12 @@ export const Register: React.FC = () => {
   const onSubmit = async (data: RegisterData) => {
     setIsLoading(true);
     try {
-      await registerUser(data);
+      // Combine firstName and lastName into name for backend
+      const registrationData = {
+        ...data,
+        name: `${data.firstName} ${data.lastName}`.trim(),
+      };
+      await registerUser(registrationData);
       navigate('/');
     } catch (error) {
       console.error('Registration error:', error);

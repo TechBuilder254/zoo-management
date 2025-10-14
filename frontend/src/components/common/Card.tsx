@@ -15,9 +15,9 @@ export const Card: React.FC<CardProps> = ({
 }) => {
   const paddingClasses = {
     none: '',
-    sm: 'p-3',
-    md: 'p-6',
-    lg: 'p-8',
+    sm: 'p-2',
+    md: 'p-4',
+    lg: 'p-6',
   };
 
   const hoverClass = hover ? 'hover:shadow-lg hover:scale-[1.02] transition-all duration-200' : '';

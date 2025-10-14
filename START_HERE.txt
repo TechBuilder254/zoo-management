@@ -1,0 +1,162 @@
+================================================
+   QUICK START GUIDE
+================================================
+
+✅ FRONTEND + BACKEND SETUP COMPLETE!
+
+All API calls are now connected:
+  Frontend → http://localhost:5000/api
+
+================================================
+   STEP 1: SETUP POSTGRESQL
+================================================
+
+Option A - If you have PostgreSQL installed:
+-----------------------------------------
+1. Open PostgreSQL (psql):
+   psql -U postgres
+
+2. Create database:
+   CREATE DATABASE zoo_db;
+   \q
+
+Option B - Use Docker (Easiest):
+-----------------------------------------
+docker run --name zoo-postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=zoo_db \
+  -p 5432:5432 -d postgres:14
+
+================================================
+   STEP 2: CONFIGURE BACKEND
+================================================
+
+1. Create backend/.env file with this content:
+
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/zoo_db?schema=public"
+JWT_SECRET=super_secret_jwt_key_change_this
+PORT=5000
+NODE_ENV=development
+FRONTEND_URL=http://localhost:3000
+
+IMPORTANT: Change "postgres:postgres" if you used different username:password
+
+================================================
+   STEP 3: RUN MIGRATIONS
+================================================
+
+cd backend
+npx prisma migrate dev --name init
+
+This creates all tables:
+  ✓ users
+  ✓ animals
+  ✓ reviews (with AI sentiment fields!)
+  ✓ bookings
+  ✓ events
+  ✓ favorites
+  ✓ health_records
+  ✓ newsletters
+
+================================================
+   STEP 4: ADD SAMPLE DATA (Optional)
+================================================
+
+npm run prisma:seed
+
+This creates:
+  - Admin user: admin@zoo.com / admin123
+  - Visitor: visitor@example.com / password123
+  - 8 animals (Lion, Elephant, Giraffe, etc.)
+  - Sample reviews with AI sentiment
+  - Sample events
+
+================================================
+   STEP 5: START BACKEND
+================================================
+
+npm run dev
+
+Server runs at: http://localhost:5000
+Test: http://localhost:5000/health
+
+================================================
+   STEP 6: START FRONTEND
+================================================
+
+Open new terminal:
+
+cd frontend
+npm start
+
+Frontend runs at: http://localhost:3000
+
+================================================
+   ✅ EVERYTHING IS CONNECTED!
+================================================
+
+Frontend API calls → Backend API → PostgreSQL
+
+What works now:
+  ✓ User registration/login
+  ✓ Browse animals (from real database)
+  ✓ Create reviews (with AI sentiment analysis)
+  ✓ Book tickets
+  ✓ Favorite animals
+  ✓ Admin features
+
+================================================
+   📊 DATABASE GUI (Optional)
+================================================
+
+View/edit database:
+
+cd backend
+npm run prisma:studio
+
+Opens at: http://localhost:5555
+
+================================================
+   🧪 TEST THE API
+================================================
+
+Register:
+curl -X POST http://localhost:5000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"test@example.com\",\"password\":\"password123\",\"name\":\"Test User\"}"
+
+Login:
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d "{\"email\":\"test@example.com\",\"password\":\"password123\"}"
+
+Get Animals:
+curl http://localhost:5000/api/animals
+
+================================================
+   ❌ TROUBLESHOOTING
+================================================
+
+Error: "Can't reach database"
+→ Make sure PostgreSQL is running
+→ Check DATABASE_URL in backend/.env
+
+Error: "Port 5000 already in use"
+→ Change PORT=5001 in backend/.env
+
+Error: "Prisma Client not generated"
+→ Run: npm run prisma:generate
+
+================================================
+   🎉 YOU'RE DONE!
+================================================
+
+Now you have:
+  ✓ Full backend API
+  ✓ PostgreSQL database
+  ✓ AI sentiment analysis on reviews
+  ✓ Sample data ready to test
+  ✓ Frontend connected to backend
+
+Start coding or add more AI features!
+

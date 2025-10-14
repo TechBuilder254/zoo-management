@@ -4,6 +4,8 @@ import { ArrowRight, Calendar, Heart, Shield, Users, Star, Quote, Mail } from 'l
 import { Button } from '../components/common/Button';
 import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
+import { Section } from '../components/common/Container';
+import { saveScrollPosition } from '../components/common/ScrollToTop';
 import { eventService } from '../services/eventService';
 import { newsletterService } from '../services/newsletterService';
 import { Event } from '../types';
@@ -13,6 +15,11 @@ export const Home: React.FC = () => {
   const [upcomingEvents, setUpcomingEvents] = useState<Event[]>([]);
   const [newsletterEmail, setNewsletterEmail] = useState('');
   const [isSubscribing, setIsSubscribing] = useState(false);
+
+  const handleNavClick = () => {
+    // Save current scroll position before navigating
+    saveScrollPosition(window.location.pathname + window.location.search);
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -121,13 +128,13 @@ export const Home: React.FC = () => {
               Book your visit today for an unforgettable experience!
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-4">
-              <Link to="/booking">
+              <Link to="/booking" onClick={handleNavClick}>
                 <Button size="lg" variant="secondary" className="shadow-xl">
                   Book Tickets Now
                   <ArrowRight className="ml-2" size={20} />
                 </Button>
               </Link>
-              <Link to="/animals">
+              <Link to="/animals" onClick={handleNavClick}>
                 <Button size="lg" variant="outline" className="bg-white/10 backdrop-blur-sm border-white/30 text-white hover:bg-white hover:text-primary shadow-xl">
                   Explore Animals
                 </Button>
@@ -147,7 +154,7 @@ export const Home: React.FC = () => {
       </div>
 
       {/* Animal Categories Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <Section background="gray">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
             Explore by Animal Type
@@ -202,7 +209,7 @@ export const Home: React.FC = () => {
             </Link>
           ))}
         </div>
-      </div>
+      </Section>
 
 
       {/* Conservation Spotlight */}
@@ -229,7 +236,7 @@ export const Home: React.FC = () => {
                   <p className="text-gray-100">Breeding Programs</p>
                 </div>
               </div>
-              <Link to="/animals?status=Endangered">
+              <Link to="/animals?status=Endangered" onClick={handleNavClick}>
                 <Button size="lg" variant="secondary">
                   Meet Our Conservation Heroes
                   <ArrowRight className="ml-2" size={20} />
@@ -263,7 +270,7 @@ export const Home: React.FC = () => {
       </div>
 
       {/* Animal Habitats Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <Section>
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
             Visit Our Unique Habitats
@@ -319,167 +326,161 @@ export const Home: React.FC = () => {
             </Card>
           ))}
         </div>
-      </div>
+      </Section>
 
       {/* Why Visit Section - Animal Focused */}
-      <div className="bg-gray-100 dark:bg-gray-800 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Why Visit Our Animals?
-            </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              Experience wildlife up close and support conservation efforts
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
-              <Card key={index} hover padding="lg" className="text-center">
-                <div className="flex justify-center mb-4">
-                  <div className="p-4 bg-primary-light dark:bg-gray-700 rounded-full">
-                    {feature.icon}
-                  </div>
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400">
-                  {feature.description}
-                </p>
-              </Card>
-            ))}
-          </div>
+      <Section background="gray">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            Why Visit Our Animals?
+          </h2>
+          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            Experience wildlife up close and support conservation efforts
+          </p>
         </div>
-      </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {features.map((feature, index) => (
+            <Card key={index} hover padding="lg" className="text-center">
+              <div className="flex justify-center mb-4">
+                <div className="p-4 bg-primary-light dark:bg-gray-700 rounded-full">
+                  {feature.icon}
+                </div>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
+                {feature.title}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400">
+                {feature.description}
+              </p>
+            </Card>
+          ))}
+        </div>
+      </Section>
 
       {/* Testimonials Section */}
-      <div className="bg-white dark:bg-gray-900 py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              What Visitors Say
-            </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-              Hear about amazing animal encounters from our happy visitors
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} padding="lg" hover>
-                <div className="flex items-center mb-4">
-                  <img
-                    src={testimonial.avatar}
-                    alt={testimonial.name}
-                    className="w-12 h-12 rounded-full mr-3"
-                  />
-                  <div className="flex-1">
-                    <h4 className="font-semibold text-gray-900 dark:text-white">
-                      {testimonial.name}
-                    </h4>
-                    <div className="flex items-center">
-                      {Array.from({ length: testimonial.rating }).map((_, i) => (
-                        <Star key={i} size={14} className="text-yellow-400 fill-current" />
-                      ))}
-                    </div>
-                  </div>
-                  <Quote size={24} className="text-primary opacity-20" />
-                </div>
-                <p className="text-gray-700 dark:text-gray-300 mb-3">
-                  {testimonial.comment}
-                </p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {testimonial.date}
-                </p>
-              </Card>
-            ))}
-          </div>
+      <Section background="white">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            What Visitors Say
+          </h2>
+          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            Hear about amazing animal encounters from our happy visitors
+          </p>
         </div>
-      </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {testimonials.map((testimonial, index) => (
+            <Card key={index} padding="lg" hover>
+              <div className="flex items-center mb-4">
+                <img
+                  src={testimonial.avatar}
+                  alt={testimonial.name}
+                  className="w-12 h-12 rounded-full mr-3"
+                />
+                <div className="flex-1">
+                  <h4 className="font-semibold text-gray-900 dark:text-white">
+                    {testimonial.name}
+                  </h4>
+                  <div className="flex items-center">
+                    {Array.from({ length: testimonial.rating }).map((_, i) => (
+                      <Star key={i} size={14} className="text-yellow-400 fill-current" />
+                    ))}
+                  </div>
+                </div>
+                <Quote size={24} className="text-primary opacity-20" />
+              </div>
+              <p className="text-gray-700 dark:text-gray-300 mb-3">
+                {testimonial.comment}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {testimonial.date}
+              </p>
+            </Card>
+          ))}
+        </div>
+      </Section>
 
       {/* Stats Section */}
-      <div className="bg-primary text-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div>
-              <div className="text-4xl md:text-5xl font-bold mb-2">200+</div>
-              <div className="text-lg text-gray-100">Animals</div>
-            </div>
-            <div>
-              <div className="text-4xl md:text-5xl font-bold mb-2">50+</div>
-              <div className="text-lg text-gray-100">Species</div>
-            </div>
-            <div>
-              <div className="text-4xl md:text-5xl font-bold mb-2">25+</div>
-              <div className="text-lg text-gray-100">Years</div>
-            </div>
-            <div>
-              <div className="text-4xl md:text-5xl font-bold mb-2">1M+</div>
-              <div className="text-lg text-gray-100">Visitors</div>
-            </div>
+      <Section 
+        background="primary"
+      >
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <div>
+            <div className="text-4xl md:text-5xl font-bold mb-2">200+</div>
+            <div className="text-lg text-gray-100">Animals</div>
+          </div>
+          <div>
+            <div className="text-4xl md:text-5xl font-bold mb-2">50+</div>
+            <div className="text-lg text-gray-100">Species</div>
+          </div>
+          <div>
+            <div className="text-4xl md:text-5xl font-bold mb-2">25+</div>
+            <div className="text-lg text-gray-100">Years</div>
+          </div>
+          <div>
+            <div className="text-4xl md:text-5xl font-bold mb-2">1M+</div>
+            <div className="text-lg text-gray-100">Visitors</div>
           </div>
         </div>
-      </div>
+      </Section>
 
       {/* Upcoming Events Section */}
       {upcomingEvents.length > 0 && (
-        <div className="bg-white dark:bg-gray-900 py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-12">
-              <div>
-                <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-                  Upcoming Events
-                </h2>
-                <p className="text-lg text-gray-600 dark:text-gray-400">
-                  Join us for exciting programs and activities
-                </p>
-              </div>
-              <Link to="/events">
-                <Button variant="outline">
-                  View All Events
-                  <ArrowRight className="ml-2" size={18} />
-                </Button>
-              </Link>
+        <Section background="white">
+          <div className="flex items-center justify-between mb-12">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+                Upcoming Events
+              </h2>
+              <p className="text-lg text-gray-600 dark:text-gray-400">
+                Join us for exciting programs and activities
+              </p>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {upcomingEvents.map((event) => (
-                <Card key={event._id} padding="none" hover className="overflow-hidden">
-                  <div className="aspect-video bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
-                    <Calendar size={64} className="text-white opacity-50" />
-                  </div>
-                  <div className="p-6">
-                    <div className="flex items-center space-x-2 text-sm text-primary mb-2">
-                      <Calendar size={16} />
-                      <span>{new Date(event.eventDate).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}</span>
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                      {event.title}
-                    </h3>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">
-                      {event.description}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-500 dark:text-gray-400">
-                        {event.startTime} - {event.endTime}
-                      </span>
-                      <Link to={`/events`}>
-                        <Button variant="ghost" size="sm">
-                          Learn More
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
+            <Link to="/events">
+              <Button variant="outline">
+                View All Events
+                <ArrowRight className="ml-2" size={18} />
+              </Button>
+            </Link>
           </div>
-        </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {upcomingEvents.map((event) => (
+              <Card key={event._id} padding="none" hover className="overflow-hidden">
+                <div className="aspect-video bg-gradient-to-br from-primary to-primary-dark flex items-center justify-center">
+                  <Calendar size={64} className="text-white opacity-50" />
+                </div>
+                <div className="p-6">
+                  <div className="flex items-center space-x-2 text-sm text-primary mb-2">
+                    <Calendar size={16} />
+                    <span>{new Date(event.eventDate).toLocaleDateString('en-US', { 
+                      month: 'short', 
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}</span>
+                  </div>
+                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                    {event.title}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-2">
+                    {event.description}
+                  </p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-500 dark:text-gray-400">
+                      {event.startTime} - {event.endTime}
+                    </span>
+                    <Link to={`/events`}>
+                      <Button variant="ghost" size="sm">
+                        Learn More
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </Section>
       )}
 
       {/* Newsletter Section */}
@@ -524,7 +525,7 @@ export const Home: React.FC = () => {
       </div>
 
       {/* CTA Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <Section>
         <Card padding="lg" className="bg-gradient-to-r from-primary-light to-blue-50 dark:from-gray-800 dark:to-gray-700 text-center">
           <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
             Ready to Start Your Adventure?
@@ -532,14 +533,14 @@ export const Home: React.FC = () => {
           <p className="text-lg text-gray-700 dark:text-gray-300 mb-6 max-w-2xl mx-auto">
             Book your tickets now and get ready for an amazing day with wildlife!
           </p>
-          <Link to="/booking">
+          <Link to="/booking" onClick={handleNavClick}>
             <Button size="lg" variant="primary">
               Get Your Tickets
               <ArrowRight className="ml-2" size={20} />
             </Button>
           </Link>
         </Card>
-      </div>
+      </Section>
     </div>
   );
 };

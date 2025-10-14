@@ -22,7 +22,7 @@ export const reviewService = {
   },
 
   moderate: async (id: string, status: ReviewStatus): Promise<Review> => {
-    const response = await api.put<Review>(`/reviews/${id}/moderate`, { status });
+    const response = await api.patch<Review>(`/reviews/${id}/status`, { status });
     return response.data;
   },
 
@@ -32,7 +32,7 @@ export const reviewService = {
   },
 
   getAll: async (): Promise<Review[]> => {
-    const response = await api.get<Review[]>('/reviews');
+    const response = await api.get<Review[]>('/reviews/admin/all');
     return response.data;
   },
 };

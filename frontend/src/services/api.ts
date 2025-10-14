@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { API_URL } from '../utils/constants';
+import { supabase } from '../config/supabase';
 
 const api: AxiosInstance = axios.create({
   baseURL: API_URL,
@@ -10,8 +11,16 @@ const api: AxiosInstance = axios.create({
 
 // Request interceptor to add token to requests
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
+  async (config) => {
+    // Try to get token from localStorage first (custom auth)
+    let token = localStorage.getItem('token');
+    
+    // If no local token, try to get from Supabase session
+    if (!token) {
+      const { data: { session } } = await supabase.auth.getSession();
+      token = session?.access_token || null;
+    }
+    
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

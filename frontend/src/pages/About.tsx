@@ -1,6 +1,7 @@
 import React from 'react';
 import { Heart, Users, Award, Target, Globe, Shield } from 'lucide-react';
 import { Card } from '../components/common/Card';
+import { Section } from '../components/common/Container';
 
 export const About: React.FC = () => {
   const values = [
@@ -77,7 +78,7 @@ export const About: React.FC = () => {
       </div>
 
       {/* Mission Section */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+      <Section>
         <Card padding="lg" className="mb-16">
           <div className="flex items-center justify-center mb-6">
             <Target size={48} className="text-primary" />
@@ -216,7 +217,7 @@ export const About: React.FC = () => {
             </p>
           </Card>
         </div>
-      </div>
+      </Section>
     </div>
   );
 };

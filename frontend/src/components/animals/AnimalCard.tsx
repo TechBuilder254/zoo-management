@@ -5,6 +5,7 @@ import { Animal } from '../../types';
 import { Card } from '../common/Card';
 import { useAuth } from '../../hooks/useAuth';
 import { animalService } from '../../services/animalService';
+import { saveScrollPosition } from '../common/ScrollToTop';
 import toast from 'react-hot-toast';
 
 interface AnimalCardProps {
@@ -15,7 +16,7 @@ interface AnimalCardProps {
 export const AnimalCard: React.FC<AnimalCardProps> = ({ animal, onFavoriteToggle }) => {
   const { isAuthenticated, user } = useAuth();
   const [isFavorite, setIsFavorite] = React.useState(
-    user?.favoriteAnimals?.includes(animal._id) || false
+    user?.favoriteAnimals?.includes(animal.id || animal._id!) || false
   );
 
   const handleFavoriteClick = async (e: React.MouseEvent) => {
@@ -28,11 +29,12 @@ export const AnimalCard: React.FC<AnimalCardProps> = ({ animal, onFavoriteToggle
     }
 
     try {
+      const animalId = animal.id || animal._id!;
       if (isFavorite) {
-        await animalService.removeFromFavorites(animal._id);
+        await animalService.removeFromFavorites(animalId);
         toast.success('Removed from favorites');
       } else {
-        await animalService.addToFavorites(animal._id);
+        await animalService.addToFavorites(animalId);
         toast.success('Added to favorites');
       }
       setIsFavorite(!isFavorite);
@@ -57,13 +59,18 @@ export const AnimalCard: React.FC<AnimalCardProps> = ({ animal, onFavoriteToggle
     }
   };
 
+  const handleCardClick = () => {
+    // Save current scroll position before navigating to animal detail
+    saveScrollPosition(window.location.pathname + window.location.search);
+  };
+
   return (
-    <Link to={`/animals/${animal._id}`}>
+    <Link to={`/animals/${animal.id || animal._id}`} onClick={handleCardClick}>
       <Card hover padding="none" className="overflow-hidden group">
         {/* Image */}
         <div className="relative h-48 overflow-hidden">
           <img
-            src={animal.mainPhoto || animal.photos[0] || '/placeholder-animal.jpg'}
+            src={animal.image_url || animal.imageUrl || animal.mainPhoto || animal.photos?.[0] || 'https://via.placeholder.com/400x300?text=Animal'}
             alt={animal.name}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
           />
@@ -81,11 +88,13 @@ export const AnimalCard: React.FC<AnimalCardProps> = ({ animal, onFavoriteToggle
           </button>
 
           {/* Conservation Status Badge */}
-          <div className="absolute top-3 left-3">
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getConservationColor(animal.conservationStatus)}`}>
-              {animal.conservationStatus}
-            </span>
-          </div>
+          {animal.conservationStatus && (
+            <div className="absolute top-3 left-3">
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getConservationColor(animal.conservationStatus)}`}>
+                {animal.conservationStatus}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -106,17 +115,17 @@ export const AnimalCard: React.FC<AnimalCardProps> = ({ animal, onFavoriteToggle
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center space-x-1 text-gray-600 dark:text-gray-400">
               <MapPin size={16} />
-              <span>{animal.habitat.name}</span>
+              <span>{typeof animal.habitat === 'string' ? animal.habitat : animal.habitat?.name}</span>
             </div>
             
-            {animal.averageRating > 0 && (
+            {(animal.averageRating || animal._count?.reviews) && (
               <div className="flex items-center space-x-1">
                 <Star size={16} className="fill-yellow-400 text-yellow-400" />
                 <span className="text-gray-900 dark:text-white font-medium">
-                  {animal.averageRating.toFixed(1)}
+                  {animal.averageRating?.toFixed(1) || '0.0'}
                 </span>
                 <span className="text-gray-500 dark:text-gray-400">
-                  ({animal.reviewCount})
+                  ({animal._count?.reviews || animal.reviewCount || 0})
                 </span>
               </div>
             )}
@@ -125,7 +134,7 @@ export const AnimalCard: React.FC<AnimalCardProps> = ({ animal, onFavoriteToggle
           {/* Animal Type */}
           <div className="mt-3">
             <span className="inline-block px-3 py-1 bg-primary-light text-primary text-xs font-medium rounded-full">
-              {animal.type}
+              {animal.category || animal.type}
             </span>
           </div>
         </div>

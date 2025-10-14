@@ -7,6 +7,7 @@ import { SearchBar } from '../components/animals/SearchBar';
 import { AnimalFilters } from '../components/animals/AnimalFilters';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
+import { Container } from '../components/common/Container';
 import { useAnimals } from '../hooks/useAnimals';
 
 type ViewMode = 'grid' | 'list';
@@ -58,7 +59,7 @@ export const Animals: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <Container>
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -145,10 +146,10 @@ export const Animals: React.FC = () => {
                   </Card>
                 ) : (
                   animals.map((animal) => (
-                    <Card key={animal._id} padding="none" hover className="overflow-hidden">
-                      <Link to={`/animals/${animal._id}`} className="flex flex-col sm:flex-row">
+                    <Card key={animal.id || animal._id} padding="none" hover className="overflow-hidden">
+                      <Link to={`/animals/${animal.id || animal._id}`} className="flex flex-col sm:flex-row">
                         <img
-                          src={animal.mainPhoto}
+                          src={animal.imageUrl || animal.mainPhoto || 'https://via.placeholder.com/400x300?text=Animal'}
                           alt={animal.name}
                           className="w-full sm:w-48 h-48 sm:h-40 object-cover"
                         />
@@ -163,7 +164,7 @@ export const Animals: React.FC = () => {
                               </p>
                             </div>
                             <span className="inline-block px-3 py-1 bg-primary-light dark:bg-primary/20 text-primary text-sm font-medium rounded-full">
-                              {animal.type}
+                              {animal.category || animal.type}
                             </span>
                           </div>
                           <p className="text-gray-700 dark:text-gray-300 mb-4 line-clamp-2">
@@ -171,9 +172,8 @@ export const Animals: React.FC = () => {
                           </p>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
-                              <span>Age: {animal.age} years</span>
-                              <span>•</span>
-                              <span><MapPin size={14} className="inline mr-1" />{animal.habitat.name}</span>
+                              {animal.age && <><span>Age: {animal.age} years</span><span>•</span></>}
+                              <span><MapPin size={14} className="inline mr-1" />{typeof animal.habitat === 'string' ? animal.habitat : animal.habitat?.name}</span>
                             </div>
                             <Button variant="ghost" size="sm">
                               View Details →
@@ -213,7 +213,7 @@ export const Animals: React.FC = () => {
             )}
           </div>
         </div>
-      </div>
+      </Container>
     </div>
   );
 };

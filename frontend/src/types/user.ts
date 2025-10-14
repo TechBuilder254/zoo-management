@@ -1,16 +1,19 @@
-export type UserRole = 'visitor' | 'admin';
+export type UserRole = 'visitor' | 'admin' | 'VISITOR' | 'ADMIN' | 'STAFF';
 
 export interface User {
-  _id: string;
+  id: string;
+  _id?: string; // For backwards compatibility
   email: string;
-  firstName: string;
-  lastName: string;
+  name: string;
+  // Legacy fields
+  firstName?: string;
+  lastName?: string;
   phone?: string;
   role: UserRole;
-  favoriteAnimals: string[];
-  newsletterSubscribed: boolean;
-  createdAt: string;
-  updatedAt: string;
+  favoriteAnimals?: string[];
+  newsletterSubscribed?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface LoginCredentials {
@@ -21,9 +24,11 @@ export interface LoginCredentials {
 export interface RegisterData {
   email: string;
   password: string;
-  confirmPassword: string;
-  firstName: string;
-  lastName: string;
+  confirmPassword?: string;
+  name: string;
+  // Legacy fields
+  firstName?: string;
+  lastName?: string;
   phone?: string;
 }
 

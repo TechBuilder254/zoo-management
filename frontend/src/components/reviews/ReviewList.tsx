@@ -16,6 +16,9 @@ export const ReviewList: React.FC<ReviewListProps> = ({
   onDelete,
   onHelpful,
 }) => {
+  console.log('ReviewList: Received reviews:', reviews);
+  console.log('ReviewList: Reviews count:', reviews.length);
+  
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[200px]">
@@ -42,7 +45,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
     <div className="space-y-4">
       {reviews.map((review) => (
         <ReviewCard
-          key={review._id}
+          key={review.id || review._id}
           review={review}
           onDelete={onDelete}
           onHelpful={onHelpful}

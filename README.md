@@ -13,6 +13,11 @@ A comprehensive web-based wildlife and zoo management system that enables visito
 - View upcoming events
 - Dark/Light mode
 - Social sharing
+- **🤖 AI-Powered chatbot for instant support**
+- **🎯 Personalized animal recommendations**
+- **📸 AI animal identification from photos**
+- **🔍 Smart natural language search**
+- **🎤 Voice search and audio tours**
 
 ### For Admins
 - Complete animal management (CRUD operations)
@@ -20,6 +25,9 @@ A comprehensive web-based wildlife and zoo management system that enables visito
 - Review moderation
 - Dashboard with statistics
 - Revenue reports
+- **🤖 AI-powered sentiment analysis on reviews**
+- **🛡️ Automated content moderation**
+- **📊 AI-driven insights and analytics**
 
 ## 🛠️ Tech Stack
 
@@ -37,6 +45,14 @@ A comprehensive web-based wildlife and zoo management system that enables visito
 - JWT Authentication
 - Cloudinary (Image Storage)
 
+**AI/ML Services:**
+- Google Gemini API (Chatbot)
+- Hugging Face (Sentiment Analysis)
+- Perspective API (Content Moderation)
+- Clarifai (Image Recognition)
+- Cohere (Semantic Search)
+- Web Speech API (Voice Features)
+
 ## 📚 Documentation
 
 See [PROJECT_DOCUMENTATION.md](./PROJECT_DOCUMENTATION.md) for complete documentation including:
@@ -46,6 +62,14 @@ See [PROJECT_DOCUMENTATION.md](./PROJECT_DOCUMENTATION.md) for complete document
 - API endpoints
 - Development roadmap
 - Setup instructions
+
+See [AI_ML_DOCUMENTATION.md](./AI_ML_DOCUMENTATION.md) for AI/ML features including:
+- AI feature specifications
+- API services and integration
+- Implementation phases
+- Cost analysis
+- Testing strategy
+- Setup guide for AI features
 
 ## 🚀 Getting Started
 

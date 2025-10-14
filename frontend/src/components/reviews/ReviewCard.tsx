@@ -6,6 +6,8 @@ import { RatingStars } from './RatingStars';
 import { formatTimeAgo } from '../../utils/formatDate';
 import { Button } from '../common/Button';
 import { useAuth } from '../../hooks/useAuth';
+import { SentimentBadge } from './SentimentBadge';
+import { useSentimentAnalysis } from '../../hooks/useSentimentAnalysis';
 
 interface ReviewCardProps {
   review: Review;
@@ -19,7 +21,8 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
   onHelpful,
 }) => {
   const { user } = useAuth();
-  const isOwnReview = user?._id === review.userId;
+  const isOwnReview = user?._id === review.userId || user?.id === review.userId;
+  const { sentiment, loading: sentimentLoading } = useSentimentAnalysis(review.comment);
 
   return (
     <Card padding="md" className="border border-gray-200 dark:border-gray-700">
@@ -27,25 +30,30 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
         <div>
           <div className="flex items-center space-x-3 mb-2">
             <div className="w-10 h-10 bg-primary rounded-full flex items-center justify-center text-white font-semibold">
-              {review.userName?.charAt(0)?.toUpperCase() || 'U'}
+              {(review.user?.name || review.userName)?.charAt(0)?.toUpperCase() || 'U'}
             </div>
             <div>
               <p className="font-semibold text-gray-900 dark:text-white">
-                {review.userName || 'Anonymous User'}
+                {review.user?.name || review.userName || 'Anonymous User'}
               </p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {formatTimeAgo(review.createdAt)}
               </p>
             </div>
           </div>
-          <RatingStars rating={review.rating} />
+          <div className="flex items-center gap-2 flex-wrap">
+            <RatingStars rating={review.rating} />
+            {sentiment && !sentimentLoading && (
+              <SentimentBadge sentiment={sentiment} size="sm" />
+            )}
+          </div>
         </div>
 
         {isOwnReview && onDelete && (
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onDelete(review._id)}
+            onClick={() => onDelete(review.id || review._id!)}
             className="text-red-600 hover:text-red-700 hover:bg-red-50"
           >
             <Trash2 size={16} />
@@ -60,16 +68,16 @@ export const ReviewCard: React.FC<ReviewCardProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => onHelpful(review._id)}
+            onClick={() => onHelpful(review.id || review._id!)}
             className="text-gray-600 dark:text-gray-400"
           >
             <ThumbsUp size={16} className="mr-1" />
-            Helpful ({review.helpful})
+            Helpful ({review.helpful || 0})
           </Button>
         </div>
       )}
 
-      {review.status === 'pending' && (
+      {(review.status === 'pending' || review.status === 'PENDING') && (
         <div className="mt-3 inline-block px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
           Pending Approval
         </div>

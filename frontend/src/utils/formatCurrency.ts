@@ -1,12 +1,15 @@
-export const formatCurrency = (amount: number, currency: string = 'USD'): string => {
+export const formatCurrency = (amount: number, currency: string = 'KSh'): string => {
   try {
+    if (currency === 'KSh') {
+      return `KSh ${amount.toLocaleString('en-KE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency,
     }).format(amount);
   } catch (error) {
     console.error('Error formatting currency:', error);
-    return `$${amount.toFixed(2)}`;
+    return `KSh ${amount.toFixed(0)}`;
   }
 };
 
