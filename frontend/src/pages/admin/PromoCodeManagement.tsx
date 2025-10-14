@@ -109,19 +109,31 @@ export const PromoCodeManagement: React.FC = () => {
 
   const getStatusColor = (promo: PromoCode) => {
     const now = new Date();
-    if (!promo.isActive) return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
-    if (now < new Date(promo.validFrom)) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
-    if (now > new Date(promo.validUntil)) return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
-    if (promo.maxUses && promo.usedCount >= promo.maxUses) return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+    const isActive = promo.isActive ?? promo.is_active ?? true;
+    const validFrom = promo.validFrom || promo.valid_from;
+    const validUntil = promo.validUntil || promo.valid_until;
+    const maxUses = promo.maxUses ?? promo.max_uses;
+    const usedCount = promo.usedCount ?? promo.used_count ?? 0;
+    
+    if (!isActive) return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+    if (validFrom && now < new Date(validFrom)) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300';
+    if (validUntil && now > new Date(validUntil)) return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+    if (maxUses && usedCount >= maxUses) return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
     return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
   };
 
   const getStatusText = (promo: PromoCode) => {
     const now = new Date();
-    if (!promo.isActive) return 'Inactive';
-    if (now < new Date(promo.validFrom)) return 'Scheduled';
-    if (now > new Date(promo.validUntil)) return 'Expired';
-    if (promo.maxUses && promo.usedCount >= promo.maxUses) return 'Max Uses Reached';
+    const isActive = promo.isActive ?? promo.is_active ?? true;
+    const validFrom = promo.validFrom || promo.valid_from;
+    const validUntil = promo.validUntil || promo.valid_until;
+    const maxUses = promo.maxUses ?? promo.max_uses;
+    const usedCount = promo.usedCount ?? promo.used_count ?? 0;
+    
+    if (!isActive) return 'Inactive';
+    if (validFrom && now < new Date(validFrom)) return 'Scheduled';
+    if (validUntil && now > new Date(validUntil)) return 'Expired';
+    if (maxUses && usedCount >= maxUses) return 'Max Uses Reached';
     return 'Active';
   };
 
@@ -213,9 +225,9 @@ export const PromoCodeManagement: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600 dark:text-gray-400">Discount:</span>
                     <span className="font-semibold text-gray-900 dark:text-white">
-                      {promo.discountType === 'PERCENTAGE' 
-                        ? `${promo.discountValue}%`
-                        : formatCurrency(promo.discountValue)
+                      {(promo.discountType || promo.discount_type) === 'PERCENTAGE' 
+                        ? `${promo.discountValue || promo.discount_value || 0}%`
+                        : formatCurrency(promo.discountValue || promo.discount_value)
                       }
                     </span>
                   </div>
@@ -223,14 +235,14 @@ export const PromoCodeManagement: React.FC = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600 dark:text-gray-400">Usage:</span>
                     <span className="font-semibold text-gray-900 dark:text-white">
-                      {promo.usedCount} / {promo.maxUses || '∞'}
+                      {promo.usedCount || promo.used_count || 0} / {promo.maxUses || promo.max_uses || '∞'}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600 dark:text-gray-400">Valid Until:</span>
                     <span className="font-semibold text-gray-900 dark:text-white text-sm">
-                      {new Date(promo.validUntil).toLocaleDateString()}
+                      {new Date(promo.validUntil || promo.valid_until || new Date()).toLocaleDateString()}
                     </span>
                   </div>
 
@@ -323,12 +335,12 @@ const PromoCodeForm: React.FC<PromoCodeFormProps> = ({
   const [formData, setFormData] = useState({
     code: promo?.code || '',
     description: promo?.description || '',
-    discountType: promo?.discountType || 'PERCENTAGE',
-    discountValue: promo?.discountValue || 0,
-    maxUses: promo?.maxUses || '',
-    validFrom: promo?.validFrom ? new Date(promo.validFrom).toISOString().split('T')[0] : '',
-    validUntil: promo?.validUntil ? new Date(promo.validUntil).toISOString().split('T')[0] : '',
-    isActive: promo?.isActive ?? true
+    discountType: promo?.discountType || promo?.discount_type || 'PERCENTAGE',
+    discountValue: promo?.discountValue || promo?.discount_value || 0,
+    maxUses: promo?.maxUses || promo?.max_uses || '',
+    validFrom: (promo?.validFrom || promo?.valid_from) ? new Date(promo.validFrom || promo.valid_from || new Date()).toISOString().split('T')[0] : '',
+    validUntil: (promo?.validUntil || promo?.valid_until) ? new Date(promo.validUntil || promo.valid_until || new Date()).toISOString().split('T')[0] : '',
+    isActive: promo?.isActive ?? promo?.is_active ?? true
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -484,9 +496,9 @@ const PromoCodeView: React.FC<PromoCodeViewProps> = ({ promo }) => {
         <div>
           <h4 className="font-medium text-gray-900 dark:text-white mb-1">Discount</h4>
           <p className="text-gray-600 dark:text-gray-400">
-            {promo.discountType === 'PERCENTAGE' 
-              ? `${promo.discountValue}%`
-              : formatCurrency(promo.discountValue)
+            {(promo.discountType || promo.discount_type) === 'PERCENTAGE' 
+              ? `${promo.discountValue || promo.discount_value || 0}%`
+              : formatCurrency(promo.discountValue || promo.discount_value)
             }
           </p>
         </div>
@@ -494,21 +506,21 @@ const PromoCodeView: React.FC<PromoCodeViewProps> = ({ promo }) => {
         <div>
           <h4 className="font-medium text-gray-900 dark:text-white mb-1">Usage</h4>
           <p className="text-gray-600 dark:text-gray-400">
-            {promo.usedCount} / {promo.maxUses || '∞'}
+            {promo.usedCount || promo.used_count || 0} / {promo.maxUses || promo.max_uses || '∞'}
           </p>
         </div>
 
         <div>
           <h4 className="font-medium text-gray-900 dark:text-white mb-1">Valid From</h4>
           <p className="text-gray-600 dark:text-gray-400">
-            {new Date(promo.validFrom).toLocaleDateString()}
+            {new Date(promo.validFrom || promo.valid_from || new Date()).toLocaleDateString()}
           </p>
         </div>
 
         <div>
           <h4 className="font-medium text-gray-900 dark:text-white mb-1">Valid Until</h4>
           <p className="text-gray-600 dark:text-gray-400">
-            {new Date(promo.validUntil).toLocaleDateString()}
+            {new Date(promo.validUntil || promo.valid_until || new Date()).toLocaleDateString()}
           </p>
         </div>
       </div>

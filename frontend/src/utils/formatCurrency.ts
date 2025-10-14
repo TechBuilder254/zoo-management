@@ -1,5 +1,10 @@
-export const formatCurrency = (amount: number, currency: string = 'KSh'): string => {
+export const formatCurrency = (amount: number | undefined | null, currency: string = 'KSh'): string => {
   try {
+    // Handle undefined or null values
+    if (amount === undefined || amount === null || isNaN(amount)) {
+      return `${currency} 0`;
+    }
+    
     if (currency === 'KSh') {
       return `KSh ${amount.toLocaleString('en-KE', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`;
     }
@@ -9,7 +14,7 @@ export const formatCurrency = (amount: number, currency: string = 'KSh'): string
     }).format(amount);
   } catch (error) {
     console.error('Error formatting currency:', error);
-    return `KSh ${amount.toFixed(0)}`;
+    return `${currency} 0`;
   }
 };
 
@@ -23,6 +28,7 @@ export const calculateTotal = (
 ): number => {
   return (adultQty * adultPrice) + (childQty * childPrice) + (seniorQty * seniorPrice);
 };
+
 
 
 

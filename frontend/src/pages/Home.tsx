@@ -120,10 +120,10 @@ export const Home: React.FC = () => {
         {/* Content */}
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="text-white">
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
+            <h1 className="text-3xl md:text-4xl font-bold mb-4 leading-tight">
               Welcome to Wildlife Zoo
             </h1>
-            <p className="text-xl md:text-2xl mb-8 text-gray-100 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-base md:text-lg mb-6 text-gray-100 max-w-3xl mx-auto leading-relaxed">
               Discover the wonders of nature and support wildlife conservation.
               Book your visit today for an unforgettable experience!
             </p>
@@ -155,11 +155,11 @@ export const Home: React.FC = () => {
 
       {/* Animal Categories Section */}
       <Section background="gray">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+        <div className="text-center mb-8">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-3">
             Explore by Animal Type
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+          <p className="text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
             Discover our diverse collection of wildlife from around the world
           </p>
         </div>
@@ -544,6 +544,7 @@ export const Home: React.FC = () => {
     </div>
   );
 };
+
 
 
 

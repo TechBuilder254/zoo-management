@@ -18,7 +18,10 @@ export const Animals: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState<ConservationStatus | undefined>();
   const [sortBy, setSortBy] = useState<'name' | 'age' | 'popularity'>('name');
   const [page, setPage] = useState(1);
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+  const [viewMode, setViewMode] = useState<ViewMode>('list'); // Default to list view
+  
+  // Debug log to verify view mode
+  console.log('Current viewMode:', viewMode);
 
   const { animals, loading, total, totalPages } = useAnimals({
     search,
@@ -61,11 +64,11 @@ export const Animals: React.FC = () => {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <Container>
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+        <div className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Our Animals
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-400">
+          <p className="text-sm md:text-base text-gray-600 dark:text-gray-400">
             Explore our diverse collection of wildlife from around the world
           </p>
         </div>
@@ -75,23 +78,31 @@ export const Animals: React.FC = () => {
           <div className="flex-1">
             <SearchBar onSearch={handleSearch} initialValue={search} />
           </div>
-          <div className="flex items-center gap-2">
-            <Button
-              variant={viewMode === 'grid' ? 'primary' : 'outline'}
-              onClick={() => setViewMode('grid')}
-              size="md"
-            >
-              <Grid size={18} className="mr-2" />
-              Grid
-            </Button>
-            <Button
-              variant={viewMode === 'list' ? 'primary' : 'outline'}
+          <div className="flex items-center gap-2 bg-white dark:bg-gray-800 p-1 rounded-lg border border-gray-200 dark:border-gray-700">
+            <button
               onClick={() => setViewMode('list')}
-              size="md"
+              className={`flex items-center gap-2 px-4 py-2 rounded-md transition-all ${
+                viewMode === 'list'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+              title="List view"
             >
-              <ListIcon size={18} className="mr-2" />
-              List
-            </Button>
+              <ListIcon size={18} />
+              <span className="hidden sm:inline">List</span>
+            </button>
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-md transition-all ${
+                viewMode === 'grid'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+              title="Grid view"
+            >
+              <Grid size={18} />
+              <span className="hidden sm:inline">Grid</span>
+            </button>
           </div>
         </div>
 
@@ -149,33 +160,33 @@ export const Animals: React.FC = () => {
                     <Card key={animal.id || animal._id} padding="none" hover className="overflow-hidden">
                       <Link to={`/animals/${animal.id || animal._id}`} className="flex flex-col sm:flex-row">
                         <img
-                          src={animal.imageUrl || animal.mainPhoto || 'https://via.placeholder.com/400x300?text=Animal'}
+                          src={animal.image_url || animal.imageUrl || animal.mainPhoto || 'https://via.placeholder.com/400x300?text=Animal'}
                           alt={animal.name}
-                          className="w-full sm:w-48 h-48 sm:h-40 object-cover"
+                          className="w-full sm:w-40 h-32 sm:h-32 object-cover"
                         />
-                        <div className="flex-1 p-6">
+                        <div className="flex-1 p-4">
                           <div className="flex items-start justify-between mb-2">
                             <div>
-                              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                              <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-0.5">
                                 {animal.name}
                               </h3>
-                              <p className="text-gray-600 dark:text-gray-400 italic">
+                              <p className="text-xs text-gray-600 dark:text-gray-400 italic">
                                 {animal.species}
                               </p>
                             </div>
-                            <span className="inline-block px-3 py-1 bg-primary-light dark:bg-primary/20 text-primary text-sm font-medium rounded-full">
+                            <span className="inline-block px-2 py-0.5 bg-primary-light dark:bg-primary/20 text-primary text-xs font-medium rounded-full">
                               {animal.category || animal.type}
                             </span>
                           </div>
-                          <p className="text-gray-700 dark:text-gray-300 mb-4 line-clamp-2">
+                          <p className="text-sm text-gray-700 dark:text-gray-300 mb-3 line-clamp-2">
                             {animal.description}
                           </p>
                           <div className="flex items-center justify-between">
-                            <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
+                            <div className="flex items-center space-x-3 text-xs text-gray-600 dark:text-gray-400">
                               {animal.age && <><span>Age: {animal.age} years</span><span>•</span></>}
-                              <span><MapPin size={14} className="inline mr-1" />{typeof animal.habitat === 'string' ? animal.habitat : animal.habitat?.name}</span>
+                              <span><MapPin size={12} className="inline mr-1" />{typeof animal.habitat === 'string' ? animal.habitat : animal.habitat?.name}</span>
                             </div>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" className="text-xs">
                               View Details →
                             </Button>
                           </div>
@@ -217,6 +228,7 @@ export const Animals: React.FC = () => {
     </div>
   );
 };
+
 
 
 

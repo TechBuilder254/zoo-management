@@ -10,7 +10,8 @@ import {
 
 const router = Router();
 
-// Public routes
+// Public routes (ticket prices should be visible to everyone)
+router.get('/', getTicketPrices); // GET /api/tickets
 router.get('/prices', getTicketPrices);
 router.get('/prices/:type', getTicketPriceByType);
 

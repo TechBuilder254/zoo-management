@@ -36,7 +36,7 @@ export const register = async (req: Request, res: Response) => {
         email: true,
         name: true,
         role: true,
-        createdAt: true,
+        created_at: true,
       },
     });
 
@@ -106,7 +106,7 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
         email: true,
         name: true,
         role: true,
-        createdAt: true,
+        created_at: true,
       },
     });
 

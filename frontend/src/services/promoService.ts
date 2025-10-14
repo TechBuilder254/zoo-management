@@ -5,14 +5,23 @@ export interface PromoCode {
   code: string;
   description?: string;
   discountType: 'PERCENTAGE' | 'FIXED_AMOUNT';
+  discount_type?: 'PERCENTAGE' | 'FIXED_AMOUNT'; // Backend snake_case
   discountValue: number;
+  discount_value?: number; // Backend snake_case
   maxUses?: number;
+  max_uses?: number; // Backend snake_case
   usedCount: number;
+  used_count?: number; // Backend snake_case
   isActive: boolean;
+  is_active?: boolean; // Backend snake_case
   validFrom: string;
+  valid_from?: string; // Backend snake_case
   validUntil: string;
+  valid_until?: string; // Backend snake_case
   createdAt: string;
+  created_at?: string; // Backend snake_case
   updatedAt: string;
+  updated_at?: string; // Backend snake_case
 }
 
 export interface CreatePromoCodeData {

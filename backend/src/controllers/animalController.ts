@@ -50,11 +50,11 @@ export const getAnimalById = async (req: Request, res: Response) => {
         reviews: {
           where: { status: 'APPROVED' },
           include: {
-            user: {
+            users: {
               select: { id: true, name: true },
             },
           },
-          orderBy: { createdAt: 'desc' },
+          orderBy: { created_at: 'desc' },
         },
         _count: {
           select: { favorites: true },

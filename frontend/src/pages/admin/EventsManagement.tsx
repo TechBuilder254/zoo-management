@@ -273,8 +273,8 @@ export const EventsManagement: React.FC = () => {
                         <td className="py-4 px-4">
                           <div className="flex items-center space-x-3">
                             <div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
-                              {event.image ? (
-                                <img src={event.image} alt={event.title} className="w-full h-full object-cover" />
+                              {(event.image_url || event.image) ? (
+                                <img src={event.image_url || event.image} alt={event.title} className="w-full h-full object-cover" />
                               ) : (
                                 <Calendar size={24} className="text-gray-400" />
                               )}

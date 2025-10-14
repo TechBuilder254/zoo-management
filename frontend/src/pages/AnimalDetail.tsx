@@ -87,7 +87,9 @@ export const AnimalDetail: React.FC = () => {
 
   const images = animal.photos && animal.photos.length > 0 
     ? animal.photos 
-    : animal.imageUrl 
+    : animal.image_url  // Check snake_case first (from backend)
+    ? [animal.image_url] 
+    : animal.imageUrl   // Then check camelCase (legacy)
     ? [animal.imageUrl] 
     : animal.mainPhoto 
     ? [animal.mainPhoto] 
@@ -294,6 +296,7 @@ export const AnimalDetail: React.FC = () => {
     </div>
   );
 };
+
 
 
 

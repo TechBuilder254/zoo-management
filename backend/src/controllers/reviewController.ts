@@ -16,8 +16,8 @@ export const createReview = async (req: AuthRequest, res: Response) => {
     // Check if user already reviewed this animal
     const existingReview = await prisma.review.findFirst({
       where: {
-        userId,
-        animalId,
+        user_id: userId,
+        animal_id: animalId,
       },
     });
 
@@ -29,12 +29,12 @@ export const createReview = async (req: AuthRequest, res: Response) => {
       data: {
         rating,
         comment,
-        userId,
-        animalId,
+        user_id: userId,
+        animal_id: animalId,
         status: 'PENDING',
       },
       include: {
-        user: {
+        users: {
           select: { id: true, name: true },
         },
       },
@@ -52,7 +52,7 @@ export const getReviewsByAnimal = async (req: Request, res: Response) => {
     const { animalId } = req.params;
     const { status } = req.query;
 
-    const where: any = { animalId };
+    const where: any = { animal_id: animalId };
 
     if (status) {
       where.status = status;
@@ -64,11 +64,11 @@ export const getReviewsByAnimal = async (req: Request, res: Response) => {
     const reviews = await prisma.review.findMany({
       where,
       include: {
-        user: {
+        users: {
           select: { id: true, name: true },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { created_at: 'desc' },
     });
 
     res.json(reviews);
@@ -142,7 +142,7 @@ export const deleteReview = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'Review not found' });
     }
 
-    if (review.userId !== userId && userRole !== 'ADMIN') {
+    if (review.user_id !== userId && userRole !== 'ADMIN') {
       return res.status(403).json({ error: 'Not authorized to delete this review' });
     }
 
@@ -164,7 +164,7 @@ export const updateReviewSentiment = async (req: AuthRequest, res: Response) => 
       where: { id },
       data: {
         sentiment,
-        sentimentScore,
+        sentiment_score: sentimentScore,
         toxicity,
       },
     });

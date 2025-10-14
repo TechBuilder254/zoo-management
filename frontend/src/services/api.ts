@@ -37,9 +37,13 @@ api.interceptors.response.use(
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       // Unauthorized - clear token and redirect to login
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      // Only redirect if we're not already on login/register pages to prevent infinite loops
+      const currentPath = window.location.pathname;
+      if (!['/login', '/register'].includes(currentPath)) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -53,6 +57,7 @@ export const handleApiError = (error: unknown): string => {
   }
   return 'An unexpected error occurred';
 };
+
 
 
 
