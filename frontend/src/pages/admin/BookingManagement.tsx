@@ -19,7 +19,7 @@ export const BookingManagement: React.FC = () => {
     const fetchBookings = async () => {
       try {
         const data = await bookingService.getAll();
-        setBookings(data);
+        setBookings(data.bookings); // Extract bookings array from paginated response
         setLoading(false);
       } catch (error) {
         console.error('Failed to fetch bookings:', error);

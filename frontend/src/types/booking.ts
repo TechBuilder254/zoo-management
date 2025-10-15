@@ -81,3 +81,4 @@ export interface UpdateBookingData {
   status?: 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
   payment_status?: string;
 }
+

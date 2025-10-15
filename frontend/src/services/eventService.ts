@@ -63,19 +63,51 @@ export interface UpdateEventData {
 export const eventService = {
   // Get all events
   getAll: async (status?: string): Promise<Event[]> => {
-    const params = status ? { status } : {};
-    const response = await api.get('/events', { params });
-    const backendEvents: BackendEvent[] = response.data;
-    return backendEvents.map(mapBackendEventToFrontend);
+    try {
+      const params = status ? { status } : {};
+      const response = await api.get('/events', { params });
+      console.log('Events API Response:', response.data);
+      
+      // Handle both array and object responses
+      const backendEvents: BackendEvent[] = Array.isArray(response.data) 
+        ? response.data 
+        : response.data.data || [];
+      
+      console.log(`Fetched ${backendEvents.length} events from backend`);
+      return backendEvents.map(mapBackendEventToFrontend);
+    } catch (error) {
+      console.error('Events fetch error:', error);
+      return [];
+    }
   },
 
   // Get upcoming events
   getUpcoming: async (): Promise<Event[]> => {
-    const response = await api.get('/events');
-    const backendEvents: BackendEvent[] = response.data;
-    const now = new Date();
-    const upcomingBackendEvents = backendEvents.filter((event: BackendEvent) => new Date(event.start_date) > now);
-    return upcomingBackendEvents.map(mapBackendEventToFrontend);
+    try {
+      const response = await api.get('/events');
+      console.log('Upcoming Events API Response:', response.data);
+      
+      const backendEvents: BackendEvent[] = Array.isArray(response.data)
+        ? response.data
+        : response.data.data || [];
+      
+      console.log(`Total events from backend: ${backendEvents.length}`);
+      
+      const now = new Date();
+      const upcomingBackendEvents = backendEvents.filter((event: BackendEvent) => {
+        const startDate = new Date(event.start_date);
+        const isUpcoming = startDate >= now;
+        const isNotCancelled = event.status !== 'CANCELLED';
+        console.log(`Event "${event.title}": start=${startDate.toISOString()}, status=${event.status}, upcoming=${isUpcoming}, notCancelled=${isNotCancelled}`);
+        return isUpcoming && isNotCancelled;
+      });
+      
+      console.log(`Filtered to ${upcomingBackendEvents.length} upcoming events`);
+      return upcomingBackendEvents.map(mapBackendEventToFrontend);
+    } catch (error) {
+      console.error('Upcoming events fetch error:', error);
+      return [];
+    }
   },
 
   // Get event by ID
@@ -101,3 +133,4 @@ export const eventService = {
     await api.delete(`/events/${id}`);
   },
 };
+

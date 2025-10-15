@@ -60,3 +60,4 @@ export interface UpdateReviewData {
   sentiment_score?: number;
   toxicity?: number;
 }
+

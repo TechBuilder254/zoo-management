@@ -1,14 +1,26 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth';
+import { cacheManager, CacheKeys, invalidateCache } from '../utils/cache';
 
 // Get all ticket prices
 export const getTicketPrices = async (req: Request, res: Response) => {
   try {
+    // Check cache
+    const cacheKey = CacheKeys.TICKETS_ACTIVE;
+    const cachedData = cacheManager.get(cacheKey);
+    if (cachedData) {
+      return res.json(cachedData);
+    }
+
     const prices = await prisma.ticketPrice.findMany({
       where: { is_active: true },
       orderBy: { ticket_type: 'asc' }
     });
+
+    // Cache for 1 hour (tickets rarely change)
+    cacheManager.set(cacheKey, prices, 3600);
+
     res.json(prices);
   } catch (error) {
     console.error('Get ticket prices error:', error);
@@ -64,6 +76,9 @@ export const updateTicketPrice = async (req: AuthRequest, res: Response) => {
       }
     });
 
+    // Invalidate ticket caches
+    invalidateCache.tickets();
+
     res.json(updatedPrice);
   } catch (error) {
     console.error('Update ticket price error:', error);
@@ -93,6 +108,9 @@ export const createTicketPrice = async (req: AuthRequest, res: Response) => {
       }
     });
 
+    // Invalidate ticket caches
+    invalidateCache.tickets();
+
     res.status(201).json(ticketPrice);
   } catch (error) {
     console.error('Create ticket price error:', error);
@@ -114,6 +132,9 @@ export const deleteTicketPrice = async (req: AuthRequest, res: Response) => {
     await prisma.ticketPrice.delete({
       where: { id }
     });
+
+    // Invalidate ticket caches
+    invalidateCache.tickets();
 
     res.json({ message: 'Ticket price deleted successfully' });
   } catch (error) {

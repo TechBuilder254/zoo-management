@@ -90,7 +90,7 @@ export const ReviewModeration: React.FC = () => {
     const fetchReviews = async () => {
       try {
         const data = await reviewService.getAll();
-        setReviews(data);
+        setReviews(data.reviews); // Extract reviews array from paginated response
         setLoading(false);
       } catch (error) {
         console.error('Failed to fetch reviews:', error);

@@ -20,6 +20,8 @@ model User {
   favorites  Favorite[]
   reviews    Review[]
 
+  @@index([role], map: "idx_users_role")
+  @@index([created_at], map: "idx_users_created_at")
   @@map("users")
 }
 
@@ -43,6 +45,10 @@ model Animal {
 
   @@index([category], map: "idx_animals_category")
   @@index([status], map: "idx_animals_status")
+  @@index([name], map: "idx_animals_name")
+  @@index([species], map: "idx_animals_species")
+  @@index([created_at], map: "idx_animals_created_at")
+  @@index([category, status], map: "idx_animals_category_status")
   @@map("animals")
 }
 
@@ -65,6 +71,11 @@ model Review {
   @@index([animal_id], map: "idx_reviews_animal_id")
   @@index([status], map: "idx_reviews_status")
   @@index([user_id], map: "idx_reviews_user_id")
+  @@index([rating], map: "idx_reviews_rating")
+  @@index([created_at], map: "idx_reviews_created_at")
+  @@index([sentiment], map: "idx_reviews_sentiment")
+  @@index([animal_id, status], map: "idx_reviews_animal_status")
+  @@index([animal_id, created_at], map: "idx_reviews_animal_created")
   @@map("reviews")
 }
 
@@ -88,6 +99,11 @@ model Booking {
   @@index([status], map: "idx_bookings_status")
   @@index([user_id], map: "idx_bookings_user_id")
   @@index([visit_date], map: "idx_bookings_visit_date")
+  @@index([created_at], map: "idx_bookings_created_at")
+  @@index([payment_status], map: "idx_bookings_payment_status")
+  @@index([user_id, status], map: "idx_bookings_user_status")
+  @@index([user_id, created_at], map: "idx_bookings_user_created")
+  @@index([visit_date, status], map: "idx_bookings_visit_status")
   @@map("bookings")
 }
 
@@ -107,6 +123,9 @@ model Event {
 
   @@index([start_date], map: "idx_events_start_date")
   @@index([status], map: "idx_events_status")
+  @@index([end_date], map: "idx_events_end_date")
+  @@index([status, start_date], map: "idx_events_status_start")
+  @@index([start_date, end_date], map: "idx_events_date_range")
   @@map("events")
 }
 
@@ -136,6 +155,9 @@ model HealthRecord {
   updated_at   DateTime? @default(now()) @db.Timestamptz(6)
   animals      Animal    @relation(fields: [animal_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 
+  @@index([animal_id], map: "idx_health_records_animal_id")
+  @@index([checkup_date], map: "idx_health_records_checkup_date")
+  @@index([animal_id, checkup_date], map: "idx_health_records_animal_checkup")
   @@map("health_records")
 }
 
@@ -145,6 +167,8 @@ model Newsletter {
   is_active  Boolean   @default(true)
   created_at DateTime? @default(now()) @db.Timestamptz(6)
 
+  @@index([is_active], map: "idx_newsletters_active")
+  @@index([created_at], map: "idx_newsletters_created_at")
   @@map("newsletters")
 }
 
@@ -157,6 +181,7 @@ model TicketPrice {
   created_at  DateTime? @default(now()) @db.Timestamptz(6)
   updated_at  DateTime? @default(now()) @db.Timestamptz(6)
 
+  @@index([is_active], map: "idx_ticket_prices_active")
   @@map("ticket_prices")
 }
 
@@ -175,6 +200,10 @@ model PromoCode {
   updated_at     DateTime?    @default(now()) @db.Timestamptz(6)
   bookings       Booking[]
 
+  @@index([is_active], map: "idx_promo_codes_active")
+  @@index([valid_from], map: "idx_promo_codes_valid_from")
+  @@index([valid_until], map: "idx_promo_codes_valid_until")
+  @@index([is_active, valid_from, valid_until], map: "idx_promo_codes_active_valid")
   @@map("promo_codes")
 }
 

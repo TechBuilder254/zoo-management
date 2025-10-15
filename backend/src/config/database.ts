@@ -1,11 +1,25 @@
 import { PrismaClient } from '@prisma/client';
 
-// Initialize Prisma Client with Supabase-compatible configuration
+// Modify DATABASE_URL to increase connection limit
+const getDatabaseUrl = () => {
+  const url = process.env.DATABASE_URL || '';
+  
+  // If using Supabase pooler, increase connection_limit parameter
+  if (url.includes('connection_limit=')) {
+    return url.replace(/connection_limit=\d+/, 'connection_limit=10');
+  } else if (url.includes('pooler.supabase.com')) {
+    return url + (url.includes('?') ? '&' : '?') + 'connection_limit=10&pool_timeout=30';
+  }
+  
+  return url;
+};
+
+// Initialize Prisma Client with optimized configuration
 const prisma = new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
   datasources: {
     db: {
-      url: process.env.DATABASE_URL,
+      url: getDatabaseUrl(),
     },
   },
 });

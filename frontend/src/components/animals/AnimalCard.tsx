@@ -147,3 +147,4 @@ export const AnimalCard: React.FC<AnimalCardProps> = ({ animal, onFavoriteToggle
 
 
 
+

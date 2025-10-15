@@ -3,6 +3,8 @@ import { validationResult } from 'express-validator';
 import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth';
 import { usePromoCode } from '../controllers/promoController';
+import { cacheManager, CacheKeys, invalidateCache } from '../utils/cache';
+import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination';
 
 export const createBooking = async (req: AuthRequest, res: Response) => {
   try {
@@ -72,6 +74,10 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    // Invalidate booking caches
+    invalidateCache.bookingsByUser(userId);
+    invalidateCache.bookings();
+
     res.status(201).json(booking);
   } catch (error) {
     console.error('Create booking error:', error);
@@ -82,6 +88,13 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
 export const getUserBookings = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.id;
+
+    // Check cache
+    const cacheKey = CacheKeys.BOOKINGS_USER(userId);
+    const cachedData = cacheManager.get(cacheKey);
+    if (cachedData) {
+      return res.json(cachedData);
+    }
 
     const bookings = await prisma.booking.findMany({
       where: { userId },
@@ -99,6 +112,9 @@ export const getUserBookings = async (req: AuthRequest, res: Response) => {
       orderBy: { createdAt: 'desc' },
     });
 
+    // Cache for 1 minute
+    cacheManager.set(cacheKey, bookings, 60);
+
     res.json(bookings);
   } catch (error) {
     console.error('Get user bookings error:', error);
@@ -109,6 +125,16 @@ export const getUserBookings = async (req: AuthRequest, res: Response) => {
 export const getAllBookings = async (req: AuthRequest, res: Response) => {
   try {
     const { status } = req.query;
+    const { page, limit, skip } = getPaginationParams(req);
+
+    // Check cache
+    const queryParams = JSON.stringify({ status, page, limit });
+    const cacheKey = CacheKeys.BOOKINGS_FILTERED(queryParams);
+    
+    const cachedData = cacheManager.get(cacheKey);
+    if (cachedData) {
+      return res.json(cachedData);
+    }
 
     const where: any = {};
 
@@ -116,26 +142,38 @@ export const getAllBookings = async (req: AuthRequest, res: Response) => {
       where.status = status;
     }
 
-    const bookings = await prisma.booking.findMany({
-      where,
-      include: {
-        users: {
-          select: { id: true, name: true, email: true },
-        },
-        promo_codes: {
-          select: {
-            id: true,
-            code: true,
-            description: true,
-            discount_type: true,
-            discount_value: true,
+    // Execute queries in parallel
+    const [bookings, totalCount] = await Promise.all([
+      prisma.booking.findMany({
+        where,
+        skip,
+        take: limit,
+        include: {
+          users: {
+            select: { id: true, name: true, email: true },
+          },
+          promo_codes: {
+            select: {
+              id: true,
+              code: true,
+              description: true,
+              discount_type: true,
+              discount_value: true,
+            },
           },
         },
-      },
-      orderBy: { created_at: 'desc' },
-    });
+        orderBy: { created_at: 'desc' },
+      }),
+      prisma.booking.count({ where }),
+    ]);
 
-    res.json(bookings);
+    // Build paginated response
+    const response = buildPaginatedResponse(bookings, totalCount, page, limit);
+
+    // Cache for 1 minute
+    cacheManager.set(cacheKey, response, 60);
+
+    res.json(response);
   } catch (error) {
     console.error('Get all bookings error:', error);
     res.status(500).json({ error: 'Error fetching bookings' });
@@ -196,6 +234,10 @@ export const updateBookingStatus = async (req: AuthRequest, res: Response) => {
       },
     });
 
+    // Invalidate booking caches
+    invalidateCache.bookingsByUser(booking.userId);
+    invalidateCache.bookings();
+
     res.json(booking);
   } catch (error) {
     console.error('Update booking error:', error);
@@ -224,6 +266,10 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
       where: { id },
       data: { status: 'CANCELLED' },
     });
+
+    // Invalidate booking caches
+    invalidateCache.bookingsByUser(booking.userId);
+    invalidateCache.bookings();
 
     res.json(updatedBooking);
   } catch (error) {

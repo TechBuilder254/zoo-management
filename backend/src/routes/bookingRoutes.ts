@@ -5,15 +5,15 @@ import { bookingValidation } from '../utils/validators';
 
 const router = Router();
 
-// User routes
-router.post('/', auth, bookingValidation, bookingController.createBooking);
-router.get('/my-bookings', auth, bookingController.getUserBookings);
-router.get('/:id', auth, bookingController.getBookingById);
-router.patch('/:id/cancel', auth, bookingController.cancelBooking);
-
-// Admin routes
+// Admin routes (more specific, must come first)
 router.get('/admin/all', auth, staffOrAdmin, bookingController.getAllBookings);
 router.patch('/:id/status', auth, staffOrAdmin, bookingController.updateBookingStatus);
+
+// User routes  
+router.get('/my-bookings', auth, bookingController.getUserBookings);
+router.post('/', auth, bookingValidation, bookingController.createBooking);
+router.get('/:id', auth, bookingController.getBookingById);
+router.patch('/:id/cancel', auth, bookingController.cancelBooking);
 
 export default router;
 

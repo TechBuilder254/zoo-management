@@ -1,10 +1,23 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth';
+import { cacheManager, CacheKeys, invalidateCache } from '../utils/cache';
+import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination';
 
 export const getAllAnimals = async (req: Request, res: Response) => {
   try {
     const { category, status, search } = req.query;
+    const { page, limit, skip } = getPaginationParams(req);
+
+    // Generate cache key based on query params including pagination
+    const queryParams = JSON.stringify({ category, status, search, page, limit });
+    const cacheKey = CacheKeys.ANIMALS_FILTERED(queryParams);
+
+    // Check cache first
+    const cachedData = cacheManager.get(cacheKey);
+    if (cachedData) {
+      return res.json(cachedData);
+    }
 
     const where: any = {};
 
@@ -23,17 +36,29 @@ export const getAllAnimals = async (req: Request, res: Response) => {
       ];
     }
 
-    const animals = await prisma.animal.findMany({
-      where,
-      orderBy: { name: 'asc' },
-      include: {
-        _count: {
-          select: { reviews: true, favorites: true },
+    // Execute queries in parallel for better performance
+    const [animals, totalCount] = await Promise.all([
+      prisma.animal.findMany({
+        where,
+        skip,
+        take: limit,
+        orderBy: { name: 'asc' },
+        include: {
+          _count: {
+            select: { reviews: true, favorites: true },
+          },
         },
-      },
-    });
+      }),
+      prisma.animal.count({ where }),
+    ]);
 
-    res.json(animals);
+    // Build paginated response
+    const response = buildPaginatedResponse(animals, totalCount, page, limit);
+
+    // Cache the result for 10 minutes
+    cacheManager.set(cacheKey, response, 600);
+
+    res.json(response);
   } catch (error) {
     console.error('Get animals error:', error);
     res.status(500).json({ error: 'Error fetching animals' });
@@ -43,6 +68,13 @@ export const getAllAnimals = async (req: Request, res: Response) => {
 export const getAnimalById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+
+    // Check cache first
+    const cacheKey = CacheKeys.ANIMAL_BY_ID(id);
+    const cachedData = cacheManager.get(cacheKey);
+    if (cachedData) {
+      return res.json(cachedData);
+    }
 
     const animal = await prisma.animal.findUnique({
       where: { id },
@@ -55,9 +87,10 @@ export const getAnimalById = async (req: Request, res: Response) => {
             },
           },
           orderBy: { created_at: 'desc' },
+          take: 10, // Limit to first 10 reviews for faster loading
         },
         _count: {
-          select: { favorites: true },
+          select: { favorites: true, reviews: true },
         },
       },
     });
@@ -65,6 +98,9 @@ export const getAnimalById = async (req: Request, res: Response) => {
     if (!animal) {
       return res.status(404).json({ error: 'Animal not found' });
     }
+
+    // Cache for 10 minutes
+    cacheManager.set(cacheKey, animal, 600);
 
     res.json(animal);
   } catch (error) {
@@ -112,6 +148,9 @@ export const createAnimal = async (req: AuthRequest, res: Response) => {
       },
     });
 
+    // Invalidate animal caches
+    invalidateCache.animals();
+
     res.status(201).json(animal);
   } catch (error) {
     console.error('Create animal error:', error);
@@ -153,6 +192,9 @@ export const updateAnimal = async (req: AuthRequest, res: Response) => {
       data: updateData,
     });
 
+    // Invalidate animal caches
+    invalidateCache.animalById(id);
+
     res.json(animal);
   } catch (error) {
     console.error('Update animal error:', error);
@@ -167,6 +209,9 @@ export const deleteAnimal = async (req: AuthRequest, res: Response) => {
     await prisma.animal.delete({
       where: { id },
     });
+
+    // Invalidate animal caches
+    invalidateCache.animalById(id);
 
     res.json({ message: 'Animal deleted successfully' });
   } catch (error) {
@@ -195,6 +240,10 @@ export const toggleFavorite = async (req: AuthRequest, res: Response) => {
       await prisma.favorite.delete({
         where: { id: existing.id },
       });
+      
+      // Invalidate animal cache (favorites count changed)
+      invalidateCache.animalById(animalId);
+      
       res.json({ favorited: false });
     } else {
       // Add to favorites
@@ -204,6 +253,10 @@ export const toggleFavorite = async (req: AuthRequest, res: Response) => {
           animalId,
         },
       });
+      
+      // Invalidate animal cache (favorites count changed)
+      invalidateCache.animalById(animalId);
+      
       res.json({ favorited: true });
     }
   } catch (error) {

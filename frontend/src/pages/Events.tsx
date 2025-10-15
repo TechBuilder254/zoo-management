@@ -27,8 +27,14 @@ export const Events: React.FC = () => {
   const loadEvents = async () => {
     setLoading(true);
     try {
+      console.log('Loading events...');
       const data = await eventService.getUpcoming();
+      console.log('Events loaded:', data);
       setEvents(data);
+      
+      if (data.length === 0) {
+        toast('No upcoming events found', { icon: 'ℹ️' });
+      }
     } catch (error) {
       toast.error('Failed to load events');
       console.error('Events error:', error);
@@ -92,6 +98,14 @@ export const Events: React.FC = () => {
               />
             </div>
             <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={loadEvents}
+                size="md"
+                disabled={loading}
+              >
+                {loading ? 'Refreshing...' : 'Refresh'}
+              </Button>
               <Button
                 variant={viewMode === 'list' ? 'primary' : 'outline'}
                 onClick={() => setViewMode('list')}
@@ -222,6 +236,7 @@ export const Events: React.FC = () => {
     </div>
   );
 };
+
 
 
 

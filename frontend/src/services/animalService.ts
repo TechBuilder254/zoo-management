@@ -1,5 +1,6 @@
 import api from './api';
 import { Animal, AnimalFormData, AnimalType, ConservationStatus } from '../types';
+import { PaginatedResponse } from '../types/pagination';
 
 export interface AnimalFilters {
   search?: string;
@@ -15,6 +16,8 @@ export interface AnimalsResponse {
   total: number;
   page: number;
   totalPages: number;
+  hasNext?: boolean;
+  hasPrev?: boolean;
 }
 
 export const animalService = {
@@ -25,14 +28,16 @@ export const animalService = {
     if (filters?.page) params.append('page', filters.page.toString());
     if (filters?.limit) params.append('limit', filters.limit.toString());
 
-    const response = await api.get<Animal[]>(`/animals?${params.toString()}`);
-    const animals = response.data;
+    const response = await api.get<PaginatedResponse<Animal>>(`/animals?${params.toString()}`);
     
+    // Backend now returns paginated response
     return {
-      animals,
-      total: animals.length,
-      page: filters?.page || 1,
-      totalPages: Math.ceil(animals.length / (filters?.limit || 12))
+      animals: response.data.data,
+      total: response.data.pagination.totalItems,
+      page: response.data.pagination.currentPage,
+      totalPages: response.data.pagination.totalPages,
+      hasNext: response.data.pagination.hasNext,
+      hasPrev: response.data.pagination.hasPrev,
     };
   },
 
@@ -58,8 +63,8 @@ export const animalService = {
   },
 
   search: async (query: string): Promise<Animal[]> => {
-    const response = await api.get<Animal[]>(`/animals?search=${query}`);
-    return response.data;
+    const response = await api.get<PaginatedResponse<Animal>>(`/animals?search=${query}`);
+    return response.data.data;
   },
 
   addToFavorites: async (animalId: string): Promise<void> => {
@@ -75,6 +80,7 @@ export const animalService = {
     return response.data;
   },
 };
+
 
 
 
