@@ -6,6 +6,7 @@ import { Card } from '../common/Card';
 import { useAuth } from '../../hooks/useAuth';
 import { animalService } from '../../services/animalService';
 import { saveScrollPosition } from '../common/ScrollToTop';
+import { ProgressiveImage } from '../../utils/imageUtils';
 import toast from 'react-hot-toast';
 
 interface AnimalCardProps {
@@ -69,10 +70,11 @@ export const AnimalCard: React.FC<AnimalCardProps> = ({ animal, onFavoriteToggle
       <Card hover padding="none" className="overflow-hidden group">
         {/* Image */}
         <div className="relative h-48 overflow-hidden">
-          <img
+          <ProgressiveImage
             src={animal.image_url || animal.imageUrl || animal.mainPhoto || animal.photos?.[0] || 'https://via.placeholder.com/400x300?text=Animal'}
             alt={animal.name}
             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+            placeholder="https://via.placeholder.com/400x300?text=Loading..."
           />
           
           {/* Favorite Button */}

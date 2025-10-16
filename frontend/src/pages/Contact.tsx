@@ -59,14 +59,14 @@ export const Contact: React.FC = () => {
     {
       icon: <Phone size={24} className="text-primary" />,
       title: 'Call Us',
-      content: '+254 720 123 456',
-      link: 'tel:+254720123456',
+      content: process.env.REACT_APP_CONTACT_PHONE_DISPLAY || '+254 720 123 456',
+      link: `tel:${process.env.REACT_APP_CONTACT_PHONE || '+254720123456'}`,
     },
     {
       icon: <Mail size={24} className="text-primary" />,
       title: 'Email Us',
-      content: 'info@wildlifezoo.co.ke',
-      link: 'mailto:info@wildlifezoo.co.ke',
+      content: process.env.REACT_APP_CONTACT_EMAIL || 'info@wildlifezoo.co.ke',
+      link: `mailto:${process.env.REACT_APP_CONTACT_EMAIL || 'info@wildlifezoo.co.ke'}`,
     },
     {
       icon: <Clock size={24} className="text-primary" />,

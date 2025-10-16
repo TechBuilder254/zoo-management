@@ -109,7 +109,7 @@ export const getUserBookings = async (req: AuthRequest, res: Response) => {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { created_at: 'desc' },
     });
 
     // Cache for 1 minute

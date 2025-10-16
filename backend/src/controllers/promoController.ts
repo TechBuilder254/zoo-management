@@ -140,7 +140,7 @@ export const updatePromoCode = async (req: AuthRequest, res: Response) => {
     if (maxUses !== undefined) updateData.maxUses = maxUses;
     if (validFrom !== undefined) updateData.validFrom = new Date(validFrom);
     if (validUntil !== undefined) updateData.validUntil = new Date(validUntil);
-    if (isActive !== undefined) updateData.isActive = isActive;
+    if (isActive !== undefined) updateData.is_active = isActive;
 
     const promoCode = await prisma.promoCode.update({
       where: { id },
@@ -165,6 +165,19 @@ export const deletePromoCode = async (req: AuthRequest, res: Response) => {
     }
 
     const { id } = req.params;
+    
+    // Check if there are any bookings using this promo code
+    const bookingsWithPromo = await prisma.booking.count({
+      where: { promo_code_id: id }
+    });
+
+    if (bookingsWithPromo > 0) {
+      return res.status(400).json({ 
+        error: `Cannot delete promo code. It is being used by ${bookingsWithPromo} booking(s). Please deactivate it instead.`,
+        bookingsCount: bookingsWithPromo
+      });
+    }
+
     await prisma.promoCode.delete({
       where: { id }
     });
@@ -172,7 +185,52 @@ export const deletePromoCode = async (req: AuthRequest, res: Response) => {
     res.json({ message: 'Promo code deleted successfully' });
   } catch (error) {
     console.error('Delete promo code error:', error);
+    
+    // Handle foreign key constraint errors specifically
+    if (error.code === 'P2003') {
+      return res.status(400).json({ 
+        error: 'Cannot delete promo code. It is being used by existing bookings. Please deactivate it instead.' 
+      });
+    }
+    
     res.status(500).json({ error: 'Error deleting promo code' });
+  }
+};
+
+// Force delete promo code and all related bookings (Admin only - Dangerous)
+export const forceDeletePromoCode = async (req: AuthRequest, res: Response) => {
+  try {
+    if (req.user?.role !== 'ADMIN') {
+      return res.status(403).json({ error: 'Admin access required' });
+    }
+
+    const { id } = req.params;
+    
+    // Get count of bookings that will be deleted
+    const bookingsCount = await prisma.booking.count({
+      where: { promo_code_id: id }
+    });
+
+    // Delete all related bookings first, then the promo code
+    await prisma.$transaction(async (tx) => {
+      // Delete all bookings that use this promo code
+      await tx.booking.deleteMany({
+        where: { promo_code_id: id }
+      });
+      
+      // Delete the promo code
+      await tx.promoCode.delete({
+        where: { id }
+      });
+    });
+
+    res.json({ 
+      message: `Promo code and ${bookingsCount} related booking(s) deleted successfully`,
+      deletedBookings: bookingsCount
+    });
+  } catch (error) {
+    console.error('Force delete promo code error:', error);
+    res.status(500).json({ error: 'Error force deleting promo code' });
   }
 };
 
@@ -195,7 +253,7 @@ export const validatePromoCode = async (req: Request, res: Response) => {
     }
 
     // Check if promo code is active
-    if (!promoCode.isActive) {
+    if (!promoCode.is_active) {
       return res.status(400).json({ error: 'Promo code is inactive' });
     }
 

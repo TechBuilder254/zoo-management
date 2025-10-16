@@ -3,9 +3,9 @@ export const GOOGLE_MAPS_API_KEY = process.env.REACT_APP_GOOGLE_MAPS_API_KEY || 
 export const STRIPE_PUBLIC_KEY = process.env.REACT_APP_STRIPE_PUBLIC_KEY || '';
 
 export const TICKET_PRICES = {
-  adult: 1500, // KSh
-  child: 750,  // KSh
-  senior: 1000, // KSh
+  adult: parseInt(process.env.REACT_APP_ADULT_TICKET_PRICE || '1500'), // KSh
+  child: parseInt(process.env.REACT_APP_CHILD_TICKET_PRICE || '750'),  // KSh
+  senior: parseInt(process.env.REACT_APP_SENIOR_TICKET_PRICE || '1000'), // KSh
 };
 
 export const ANIMAL_TYPES = [

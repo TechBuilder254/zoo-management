@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Users, DollarSign, Ticket, PawPrint } from 'lucide-react';
 import { Card } from '../../components/common/Card';
-import { Sidebar } from '../../components/admin/Sidebar';
+import { AdminLayout } from '../../components/admin/AdminLayout';
 import { statsService, DashboardStats } from '../../services/statsService';
 
 // Remove duplicate interface since it's imported from statsService
@@ -60,11 +60,7 @@ export const Dashboard: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Sidebar />
-      
-      <div className="lg:ml-56">
-        <div className="p-3 lg:p-6">
+    <AdminLayout>
           {/* Header */}
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
@@ -174,9 +170,7 @@ export const Dashboard: React.FC = () => {
               </div>
             </Card>
           </div>
-        </div>
-      </div>
-    </div>
+    </AdminLayout>
   );
 };
 

@@ -28,12 +28,13 @@ export const Events: React.FC = () => {
     setLoading(true);
     try {
       console.log('Loading events...');
-      const data = await eventService.getUpcoming();
+      // Use getAll instead of getUpcoming to get all events first
+      const data = await eventService.getAll();
       console.log('Events loaded:', data);
       setEvents(data);
       
       if (data.length === 0) {
-        toast('No upcoming events found', { icon: 'ℹ️' });
+        toast('No events found', { icon: 'ℹ️' });
       }
     } catch (error) {
       toast.error('Failed to load events');
@@ -54,7 +55,23 @@ export const Events: React.FC = () => {
   const filteredEvents = events.filter(event => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = selectedCategory === 'all' || event.category === selectedCategory;
+    
+    // Get category from event or infer from title/description
+    const getEventCategory = () => {
+      if (event.category) return event.category;
+      const title = event.title?.toLowerCase() || '';
+      const description = event.description?.toLowerCase() || '';
+      
+      if (title.includes('feeding') || description.includes('feeding')) return 'Feeding';
+      if (title.includes('educational') || description.includes('educational') || title.includes('learn')) return 'Educational';
+      if (title.includes('workshop') || description.includes('workshop')) return 'Workshop';
+      if (title.includes('special') || title.includes('show') || title.includes('parade')) return 'Special Event';
+      
+      return 'Special Event'; // Default category
+    };
+    
+    const eventCategory = getEventCategory();
+    const matchesCategory = selectedCategory === 'all' || eventCategory === selectedCategory;
     const matchesDate = !selectedDate || 
                        new Date(event.start_date || event.eventDate || '').toDateString() === selectedDate.toDateString();
     

@@ -4,7 +4,7 @@ import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Modal } from '../../components/common/Modal';
-import { Sidebar } from '../../components/admin/Sidebar';
+import { AdminLayout } from '../../components/admin/AdminLayout';
 import { EventForm } from '../../components/admin/EventForm';
 import { eventService } from '../../services/eventService';
 import { Event } from '../../types/event';
@@ -122,46 +122,77 @@ export const EventsManagement: React.FC = () => {
     const matchesSearch = event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          event.location.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = selectedType === '' || selectedType === 'All' || event.category === selectedType;
+    
+    // Get category from event or infer from title/description
+    const getEventCategory = () => {
+      if (event.category) return event.category;
+      const title = event.title?.toLowerCase() || '';
+      const description = event.description?.toLowerCase() || '';
+      
+      if (title.includes('feeding') || description.includes('feeding')) return 'Feeding';
+      if (title.includes('educational') || description.includes('educational') || title.includes('learn')) return 'Educational';
+      if (title.includes('workshop') || description.includes('workshop')) return 'Workshop';
+      if (title.includes('special') || title.includes('show') || title.includes('parade')) return 'Special Event';
+      
+      return 'Special Event'; // Default category
+    };
+    
+    const eventCategory = getEventCategory();
+    const matchesType = selectedType === '' || selectedType === 'All' || eventCategory === selectedType;
     const matchesStatus = selectedStatus === '' || selectedStatus === 'All' || 
-                         (selectedStatus === 'Scheduled' && event.isActive) ||
-                         (selectedStatus === 'Completed' && !event.isActive);
+                         (selectedStatus === 'Scheduled' && (event.status === 'UPCOMING' || event.isActive)) ||
+                         (selectedStatus === 'Completed' && (event.status === 'COMPLETED' || !event.isActive));
     
     return matchesSearch && matchesType && matchesStatus;
   });
 
-  const getStatusColor = (isActive: boolean) => {
-    return isActive 
-      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-      : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400';
+  const getStatusColor = (status: string, isActive?: boolean) => {
+    switch (status) {
+      case 'UPCOMING':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300';
+      case 'ONGOING':
+        return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300';
+      case 'COMPLETED':
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400';
+      case 'CANCELLED':
+        return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300';
+      default:
+        return isActive 
+          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+          : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400';
+    }
   };
 
-  const getStatusText = (isActive: boolean) => {
-    return isActive ? 'Active' : 'Completed';
+  const getStatusText = (status: string, isActive?: boolean) => {
+    switch (status) {
+      case 'UPCOMING':
+        return 'Upcoming';
+      case 'ONGOING':
+        return 'Ongoing';
+      case 'COMPLETED':
+        return 'Completed';
+      case 'CANCELLED':
+        return 'Cancelled';
+      default:
+        return isActive ? 'Active' : 'Completed';
+    }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Sidebar />
-        <div className="lg:ml-56 p-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-gray-600 dark:text-gray-400">Loading events...</p>
-            </div>
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Loading events...</p>
           </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Sidebar />
-      
-      <div className="lg:ml-56">
-        <div className="p-3 lg:p-6">
+    <AdminLayout>
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
             <div>
@@ -291,7 +322,7 @@ export const EventsManagement: React.FC = () => {
                         </td>
                         <td className="py-4 px-4">
                           <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
-                            {event.category}
+                            {event.category || 'Special Event'}
                           </span>
                         </td>
                         <td className="py-4 px-4">
@@ -300,7 +331,15 @@ export const EventsManagement: React.FC = () => {
                               {new Date(event.start_date || event.eventDate || '').toLocaleDateString()}
                             </p>
                             <p className="text-gray-600 dark:text-gray-400">
-                              {event.startTime} - {event.endTime}
+                              {new Date(event.start_date || event.eventDate || '').toLocaleTimeString('en-US', { 
+                                hour: 'numeric', 
+                                minute: '2-digit',
+                                hour12: true 
+                              })} - {new Date(event.end_date || '').toLocaleTimeString('en-US', { 
+                                hour: 'numeric', 
+                                minute: '2-digit',
+                                hour12: true 
+                              })}
                             </p>
                           </div>
                         </td>
@@ -317,8 +356,8 @@ export const EventsManagement: React.FC = () => {
                           </div>
                         </td>
                         <td className="py-4 px-4">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(event.isActive || false)}`}>
-                            {getStatusText(event.isActive || false)}
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(event.status || 'UPCOMING', event.isActive)}`}>
+                            {getStatusText(event.status || 'UPCOMING', event.isActive)}
                           </span>
                         </td>
                         <td className="py-4 px-4">
@@ -381,7 +420,7 @@ export const EventsManagement: React.FC = () => {
                     {selectedEvent.title}
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400 mt-1">
-                    {selectedEvent.category}
+                    {selectedEvent.category || 'Special Event'}
                   </p>
                     </div>
                     
@@ -402,7 +441,15 @@ export const EventsManagement: React.FC = () => {
                   <div>
                     <h4 className="font-medium text-gray-900 dark:text-white mb-1">Time</h4>
                     <p className="text-gray-600 dark:text-gray-400">
-                      {selectedEvent.startTime} - {selectedEvent.endTime}
+                      {new Date(selectedEvent.start_date || selectedEvent.eventDate || '').toLocaleTimeString('en-US', { 
+                        hour: 'numeric', 
+                        minute: '2-digit',
+                        hour12: true 
+                      })} - {new Date(selectedEvent.end_date || '').toLocaleTimeString('en-US', { 
+                        hour: 'numeric', 
+                        minute: '2-digit',
+                        hour12: true 
+                      })}
                     </p>
                   </div>
                     </div>
@@ -424,8 +471,8 @@ export const EventsManagement: React.FC = () => {
 
                     <div>
                   <h4 className="font-medium text-gray-900 dark:text-white mb-1">Status</h4>
-                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedEvent.isActive || false)}`}>
-                    {getStatusText(selectedEvent.isActive || false)}
+                  <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedEvent.status || 'UPCOMING', selectedEvent.isActive)}`}>
+                    {getStatusText(selectedEvent.status || 'UPCOMING', selectedEvent.isActive)}
                           </span>
                       </div>
 
@@ -444,8 +491,6 @@ export const EventsManagement: React.FC = () => {
               />
             )}
           </Modal>
-        </div>
-      </div>
-    </div>
+        </AdminLayout>
   );
 };

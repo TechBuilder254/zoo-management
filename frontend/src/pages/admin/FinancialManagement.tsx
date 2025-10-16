@@ -1,19 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, DollarSign, Calendar, Download, BarChart3, PieChart } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, Calendar, Download, BarChart3, PieChart, Ticket, Star } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
-import { Sidebar } from '../../components/admin/Sidebar';
+import { AdminLayout } from '../../components/admin/AdminLayout';
 import { financialService, FinancialData } from '../../services/financialService';
 import toast from 'react-hot-toast';
-
-interface RevenueData {
-  period: string;
-  ticketSales: number;
-  events: number;
-  merchandise: number;
-  donations: number;
-  total: number;
-}
 
 interface ExpenseData {
   category: string;
@@ -25,8 +16,8 @@ interface ExpenseData {
 export const FinancialManagement: React.FC = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('monthly');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
-  const [, setFinancialData] = useState<FinancialData | null>(null);
-  const [, setLoading] = useState(true);
+  const [financialData, setFinancialData] = useState<FinancialData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   // Fetch financial data
   useEffect(() => {
@@ -46,58 +37,72 @@ export const FinancialManagement: React.FC = () => {
     fetchFinancialData();
   }, [selectedPeriod, selectedYear]);
 
-  const expenseData: ExpenseData[] = [
+  // Calculate expense data from real data
+  const expenseData: ExpenseData[] = financialData ? [
     {
       category: 'Animal Care',
-      amount: 850000,
-      percentage: 35,
+      amount: financialData.expenses.breakdown.animalCare,
+      percentage: financialData.expenses.total > 0 ? (financialData.expenses.breakdown.animalCare / financialData.expenses.total) * 100 : 0,
       trend: 'up'
     },
     {
       category: 'Staff Salaries',
-      amount: 680000,
-      percentage: 28,
+      amount: financialData.expenses.breakdown.staffSalaries,
+      percentage: financialData.expenses.total > 0 ? (financialData.expenses.breakdown.staffSalaries / financialData.expenses.total) * 100 : 0,
       trend: 'stable'
     },
     {
       category: 'Maintenance',
-      amount: 420000,
-      percentage: 17,
+      amount: financialData.expenses.breakdown.maintenance,
+      percentage: financialData.expenses.total > 0 ? (financialData.expenses.breakdown.maintenance / financialData.expenses.total) * 100 : 0,
       trend: 'down'
     },
     {
       category: 'Utilities',
-      amount: 320000,
-      percentage: 13,
+      amount: financialData.expenses.breakdown.utilities,
+      percentage: financialData.expenses.total > 0 ? (financialData.expenses.breakdown.utilities / financialData.expenses.total) * 100 : 0,
       trend: 'up'
     },
     {
       category: 'Marketing',
-      amount: 180000,
-      percentage: 7,
+      amount: financialData.expenses.breakdown.marketing,
+      percentage: financialData.expenses.total > 0 ? (financialData.expenses.breakdown.marketing / financialData.expenses.total) * 100 : 0,
       trend: 'up'
+    },
+    {
+      category: 'Insurance',
+      amount: financialData.expenses.breakdown.insurance,
+      percentage: financialData.expenses.total > 0 ? (financialData.expenses.breakdown.insurance / financialData.expenses.total) * 100 : 0,
+      trend: 'stable'
+    },
+    {
+      category: 'Other',
+      amount: financialData.expenses.breakdown.other,
+      percentage: financialData.expenses.total > 0 ? (financialData.expenses.breakdown.other / financialData.expenses.total) * 100 : 0,
+      trend: 'stable'
     }
-  ];
+  ] : [];
 
-  const monthlyRevenue = [
-    { month: 'Jan', amount: 2200000 },
-    { month: 'Feb', amount: 1950000 },
-    { month: 'Mar', amount: 2100000 },
-    { month: 'Apr', amount: 1850000 },
-    { month: 'May', amount: 2300000 },
-    { month: 'Jun', amount: 2450000 }
-  ];
+  // Use real monthly revenue data
+  const monthlyRevenue = financialData?.revenue.monthly || [];
 
-  const revenueData: RevenueData[] = [
-    { period: 'Current Month', ticketSales: 1500000, events: 450000, merchandise: 250000, donations: 100000, total: 2300000 },
-    { period: 'Previous Month', ticketSales: 1400000, events: 350000, merchandise: 200000, donations: 150000, total: 2100000 }
-  ];
+  // Calculate revenue breakdown from real data
+  const revenueBreakdown = financialData ? {
+    ticketSales: financialData.revenue.byTicketType.reduce((sum, type) => sum + (type._sum.total_price || 0), 0),
+    events: 0, // Events not implemented yet
+    merchandise: 0, // Merchandise not implemented yet
+    donations: 0, // Donations not implemented yet
+    total: financialData.financial.totalRevenue
+  } : {
+    ticketSales: 0,
+    events: 0,
+    merchandise: 0,
+    donations: 0,
+    total: 0
+  };
 
-  const currentMonth = revenueData[0];
-  const previousMonth = revenueData[1];
-  
-  const revenueGrowth = ((currentMonth.total - previousMonth.total) / previousMonth.total) * 100;
-  const expenseGrowth = ((850000 - 820000) / 820000) * 100; // Mock calculation
+  const revenueGrowth = financialData?.trends.revenueGrowth || 0;
+  const expenseGrowth = 0; // Would need historical data for real calculation
 
   const formatCurrency = (amount: number) => {
     return `KSh ${amount.toLocaleString()}`;
@@ -115,12 +120,21 @@ export const FinancialManagement: React.FC = () => {
   };
 
 
+  if (loading) {
+    return (
+      <AdminLayout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Loading financial data...</p>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Sidebar />
-      
-      <div className="lg:ml-56">
-        <div className="p-3 lg:p-6">
+    <AdminLayout>
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 lg:mb-8 gap-4">
             <div>
@@ -182,7 +196,7 @@ export const FinancialManagement: React.FC = () => {
                 <DollarSign className="text-green-600 dark:text-green-400" size={24} />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                {formatCurrency(currentMonth.total)}
+                {loading ? 'Loading...' : formatCurrency(financialData?.financial.totalRevenue || 0)}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-2">Total Revenue</p>
               <div className="flex items-center justify-center text-sm">
@@ -198,7 +212,7 @@ export const FinancialManagement: React.FC = () => {
                 <TrendingDown className="text-red-600 dark:text-red-400" size={24} />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                {formatCurrency(2450000)}
+                {loading ? 'Loading...' : formatCurrency(financialData?.financial.totalExpenses || 0)}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-2">Total Expenses</p>
               <div className="flex items-center justify-center text-sm">
@@ -214,12 +228,12 @@ export const FinancialManagement: React.FC = () => {
                 <BarChart3 className="text-blue-600 dark:text-blue-400" size={24} />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                {formatCurrency(currentMonth.total - 2450000)}
+                {loading ? 'Loading...' : formatCurrency(financialData?.financial.netProfit || 0)}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-2">Net Profit</p>
               <div className="flex items-center justify-center text-sm">
-                <span className={`${(currentMonth.total - 2450000) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                  {(currentMonth.total - 2450000) > 0 ? 'Profitable' : 'Loss'}
+                <span className={`${(financialData?.financial.netProfit || 0) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {(financialData?.financial.netProfit || 0) > 0 ? 'Profitable' : 'Loss'}
                 </span>
               </div>
             </Card>
@@ -229,12 +243,60 @@ export const FinancialManagement: React.FC = () => {
                 <Calendar className="text-purple-600 dark:text-purple-400" size={24} />
               </div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                {formatCurrency(currentMonth.total / 31)}
+                {loading ? 'Loading...' : formatCurrency(financialData?.financial.avgDailyRevenue || 0)}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-2">Daily Average</p>
               <div className="flex items-center justify-center text-sm">
                 <span className="text-gray-600 dark:text-gray-400">
-                  This month
+                  This {selectedPeriod}
+                </span>
+              </div>
+            </Card>
+          </div>
+
+          {/* Additional Metrics */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
+            <Card padding="lg" className="text-center">
+              <div className="flex items-center justify-center w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg mx-auto mb-3">
+                <Ticket className="text-blue-600 dark:text-blue-400" size={24} />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                {loading ? 'Loading...' : financialData?.bookings.total || 0}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-2">Total Bookings</p>
+              <div className="flex items-center justify-center text-sm">
+                <span className="text-gray-600 dark:text-gray-400">
+                  This {selectedPeriod}
+                </span>
+              </div>
+            </Card>
+            
+            <Card padding="lg" className="text-center">
+              <div className="flex items-center justify-center w-12 h-12 bg-orange-100 dark:bg-orange-900 rounded-lg mx-auto mb-3">
+                <DollarSign className="text-orange-600 dark:text-orange-400" size={24} />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                {loading ? 'Loading...' : formatCurrency(financialData?.financial.avgBookingValue || 0)}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-2">Avg Booking Value</p>
+              <div className="flex items-center justify-center text-sm">
+                <span className="text-gray-600 dark:text-gray-400">
+                  Per booking
+                </span>
+              </div>
+            </Card>
+            
+            <Card padding="lg" className="text-center">
+              <div className="flex items-center justify-center w-12 h-12 bg-green-100 dark:bg-green-900 rounded-lg mx-auto mb-3">
+                <Star className="text-green-600 dark:text-green-400" size={24} />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                {loading ? 'Loading...' : `${financialData?.financial.profitMargin.toFixed(1) || 0}%`}
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-2">Profit Margin</p>
+              <div className="flex items-center justify-center text-sm">
+                <span className={`${(financialData?.financial.profitMargin || 0) > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                  {(financialData?.financial.profitMargin || 0) > 0 ? 'Profitable' : 'Loss'}
                 </span>
               </div>
             </Card>
@@ -251,62 +313,76 @@ export const FinancialManagement: React.FC = () => {
               </div>
               
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="w-3 h-3 bg-blue-500 rounded-full mr-3"></div>
-                    <span className="text-gray-600 dark:text-gray-400">Ticket Sales</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-gray-900 dark:text-white">
-                      {formatCurrency(currentMonth.ticketSales)}
+                {/* Ticket Sales by Type */}
+                {financialData?.revenue.byTicketType.map((ticketType, index) => {
+                  const colors = ['bg-blue-500', 'bg-green-500', 'bg-yellow-500', 'bg-purple-500', 'bg-red-500'];
+                  const color = colors[index % colors.length];
+                  const percentage = revenueBreakdown.total > 0 ? (ticketType._sum.total_price || 0) / revenueBreakdown.total * 100 : 0;
+                  
+                  return (
+                    <div key={ticketType.ticket_type} className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <div className={`w-3 h-3 ${color} rounded-full mr-3`}></div>
+                        <span className="text-gray-600 dark:text-gray-400 capitalize">
+                          {ticketType.ticket_type} Tickets
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-gray-900 dark:text-white">
+                          {formatCurrency(ticketType._sum.total_price || 0)}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          {percentage.toFixed(1)}%
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-500">
-                      {Math.round((currentMonth.ticketSales / currentMonth.total) * 100)}%
-                    </div>
-                  </div>
-                </div>
+                  );
+                })}
                 
-                <div className="flex items-center justify-between">
+                {/* Events (placeholder for future implementation) */}
+                <div className="flex items-center justify-between opacity-50">
                   <div className="flex items-center">
                     <div className="w-3 h-3 bg-green-500 rounded-full mr-3"></div>
                     <span className="text-gray-600 dark:text-gray-400">Events</span>
                   </div>
                   <div className="text-right">
                     <div className="font-semibold text-gray-900 dark:text-white">
-                      {formatCurrency(currentMonth.events)}
+                      {formatCurrency(0)}
                     </div>
                     <div className="text-sm text-gray-500">
-                      {Math.round((currentMonth.events / currentMonth.total) * 100)}%
+                      0%
                     </div>
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-between">
+                {/* Merchandise (placeholder for future implementation) */}
+                <div className="flex items-center justify-between opacity-50">
                   <div className="flex items-center">
                     <div className="w-3 h-3 bg-yellow-500 rounded-full mr-3"></div>
                     <span className="text-gray-600 dark:text-gray-400">Merchandise</span>
                   </div>
                   <div className="text-right">
                     <div className="font-semibold text-gray-900 dark:text-white">
-                      {formatCurrency(currentMonth.merchandise)}
+                      {formatCurrency(0)}
                     </div>
                     <div className="text-sm text-gray-500">
-                      {Math.round((currentMonth.merchandise / currentMonth.total) * 100)}%
+                      0%
                     </div>
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-between">
+                {/* Donations (placeholder for future implementation) */}
+                <div className="flex items-center justify-between opacity-50">
                   <div className="flex items-center">
                     <div className="w-3 h-3 bg-purple-500 rounded-full mr-3"></div>
                     <span className="text-gray-600 dark:text-gray-400">Donations</span>
                   </div>
                   <div className="text-right">
                     <div className="font-semibold text-gray-900 dark:text-white">
-                      {formatCurrency(currentMonth.donations)}
+                      {formatCurrency(0)}
                     </div>
                     <div className="text-sm text-gray-500">
-                      {Math.round((currentMonth.donations / currentMonth.total) * 100)}%
+                      0%
                     </div>
                   </div>
                 </div>
@@ -360,25 +436,35 @@ export const FinancialManagement: React.FC = () => {
             </div>
             
             <div className="flex items-end justify-between h-64 space-x-2">
-              {monthlyRevenue.map((month, index) => {
-                const maxAmount = Math.max(...monthlyRevenue.map(m => m.amount));
-                const height = (month.amount / maxAmount) * 100;
-                
-                return (
-                  <div key={index} className="flex flex-col items-center flex-1">
-                    <div className="flex flex-col items-center mb-2">
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {formatCurrency(month.amount)}
+              {loading ? (
+                <div className="flex items-center justify-center w-full h-full">
+                  <div className="text-gray-500">Loading chart data...</div>
+                </div>
+              ) : monthlyRevenue.length > 0 ? (
+                monthlyRevenue.map((month, index) => {
+                  const maxAmount = Math.max(...monthlyRevenue.map(m => m.revenue));
+                  const height = maxAmount > 0 ? (month.revenue / maxAmount) * 100 : 0;
+                  
+                  return (
+                    <div key={index} className="flex flex-col items-center flex-1">
+                      <div className="flex flex-col items-center mb-2">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                          {formatCurrency(month.revenue)}
+                        </div>
                       </div>
+                      <div 
+                        className="w-full bg-primary rounded-t-lg transition-all duration-300 hover:bg-primary-dark"
+                        style={{ height: `${height}%`, minHeight: '20px' }}
+                      ></div>
+                      <div className="text-xs text-gray-500 mt-2">{month.month}</div>
                     </div>
-                    <div 
-                      className="w-full bg-primary rounded-t-lg transition-all duration-300 hover:bg-primary-dark"
-                      style={{ height: `${height}%`, minHeight: '20px' }}
-                    ></div>
-                    <div className="text-xs text-gray-500 mt-2">{month.month}</div>
-                  </div>
-                );
-              })}
+                  );
+                })
+              ) : (
+                <div className="flex items-center justify-center w-full h-full">
+                  <div className="text-gray-500">No revenue data available</div>
+                </div>
+              )}
             </div>
           </Card>
 
@@ -412,46 +498,75 @@ export const FinancialManagement: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                  {[
-                    { date: '2024-01-20', description: 'Daily ticket sales', category: 'Revenue', amount: 45000, type: 'Income' },
-                    { date: '2024-01-20', description: 'Animal feed purchase', category: 'Animal Care', amount: -8500, type: 'Expense' },
-                    { date: '2024-01-19', description: 'Staff salaries', category: 'Payroll', amount: -680000, type: 'Expense' },
-                    { date: '2024-01-19', description: 'Event ticket sales', category: 'Revenue', amount: 125000, type: 'Income' },
-                    { date: '2024-01-18', description: 'Facility maintenance', category: 'Maintenance', amount: -15000, type: 'Expense' },
-                    { date: '2024-01-18', description: 'Merchandise sales', category: 'Revenue', amount: 28000, type: 'Income' }
-                  ].map((transaction, index) => (
-                    <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                        {transaction.date}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                        {transaction.description}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                        {transaction.category}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <span className={transaction.amount > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}>
-                          {transaction.amount > 0 ? '+' : ''}{formatCurrency(transaction.amount)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          transaction.type === 'Income' 
-                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                        }`}>
-                          {transaction.type}
-                        </span>
+                  {loading ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                        Loading transactions...
                       </td>
                     </tr>
-                  ))}
+                  ) : financialData?.bookings.total === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-4 text-center text-gray-500">
+                        No transactions found for the selected period
+                      </td>
+                    </tr>
+                  ) : (
+                    <>
+                      {/* Show recent bookings as transactions */}
+                      {financialData?.bookings.byStatus.map((status, index) => (
+                        <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {new Date().toISOString().split('T')[0]}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                            {status.status} Bookings
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            Revenue
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <span className="text-green-600 dark:text-green-400">
+                              +{formatCurrency(financialData?.financial.avgBookingValue || 0)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">
+                              Income
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                      
+                      {/* Show expense transactions */}
+                      {expenseData.map((expense, index) => (
+                        <tr key={`expense-${index}`} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            {new Date().toISOString().split('T')[0]}
+                          </td>
+                          <td className="px-6 py-4 text-sm text-gray-900 dark:text-white">
+                            {expense.category}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                            {expense.category}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <span className="text-red-600 dark:text-red-400">
+                              -{formatCurrency(expense.amount)}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
+                              Expense
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </>
+                  )}
                 </tbody>
               </table>
             </div>
           </Card>
-        </div>
-      </div>
-    </div>
+        </AdminLayout>
   );
 };

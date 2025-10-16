@@ -200,7 +200,7 @@ export const BookingConfirmation: React.FC = () => {
     } else {
       doc.setTextColor(darkGray);
       doc.setFont('helvetica', 'normal');
-      doc.text(`${booking.ticketType} Tickets`, 20, yPos);
+      doc.text(`${booking.ticket_type || booking.ticketType} Tickets`, 20, yPos);
       doc.text(`× ${booking.quantity}`, pageWidth - 100, yPos);
       doc.text(`KSh ${booking.totalPrice?.toLocaleString()}`, pageWidth - 40, yPos);
       yPos += 8;

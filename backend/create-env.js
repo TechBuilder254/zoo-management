@@ -2,6 +2,10 @@ const fs = require('fs');
 
 const envContent = `# Database (PostgreSQL Local)
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/zoo_db?schema=public"
+DIRECT_URL="postgresql://postgres:postgres@localhost:5432/zoo_db?schema=public"
+
+# Redis Configuration
+REDIS_URL=redis://localhost:6379
 
 # JWT Secret
 JWT_SECRET=super_secret_jwt_key_change_this_in_production_please_zoo_wildlife_2025

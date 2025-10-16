@@ -77,7 +77,7 @@ export const ETicket: React.FC<ETicketProps> = ({ booking }) => {
             </>
           ) : (
             <div className="flex justify-between">
-              <span>{booking.ticketType} × {booking.quantity}</span>
+              <span>{booking.ticket_type || booking.ticketType} × {booking.quantity}</span>
               <span>{formatCurrency(booking.total_price || booking.totalPrice || 0)}</span>
             </div>
           )}

@@ -112,6 +112,12 @@ export const CacheKeys = {
   // Stats cache keys
   STATS_DASHBOARD: 'stats:dashboard',
   STATS_ANALYTICS: 'stats:analytics',
+  
+  // Health cache keys
+  HEALTH_ALL: 'health:all',
+  HEALTH_STATS: 'health:stats',
+  HEALTH_APPOINTMENTS: 'health:appointments',
+  HEALTH_ALERTS: 'health:alerts',
 };
 
 /**
@@ -181,6 +187,11 @@ export const invalidateCache = {
   // Invalidate all stats-related caches
   stats: () => {
     cacheManager.delByPattern('stats:');
+  },
+  
+  // Invalidate all health-related caches
+  health: () => {
+    cacheManager.delByPattern('health:');
   },
   
   // Invalidate everything

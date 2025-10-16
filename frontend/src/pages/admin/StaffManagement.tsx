@@ -4,7 +4,7 @@ import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Modal } from '../../components/common/Modal';
-import { Sidebar } from '../../components/admin/Sidebar';
+import { AdminLayout } from '../../components/admin/AdminLayout';
 import { StaffForm } from '../../components/admin/StaffForm';
 import { staffService, StaffMember } from '../../services/staffService';
 import toast from 'react-hot-toast';
@@ -125,26 +125,19 @@ export const StaffManagement: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Sidebar />
-        <div className="lg:ml-56 p-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-gray-600 dark:text-gray-400">Loading staff members...</p>
-            </div>
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Loading staff members...</p>
           </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Sidebar />
-      
-      <div className="lg:ml-56">
-        <div className="p-3 lg:p-6">
+    <AdminLayout>
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
             <div>
@@ -362,8 +355,6 @@ export const StaffManagement: React.FC = () => {
               />
             )}
           </Modal>
-        </div>
-      </div>
-    </div>
+        </AdminLayout>
   );
 };

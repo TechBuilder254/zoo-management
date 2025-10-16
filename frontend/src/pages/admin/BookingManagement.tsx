@@ -4,7 +4,7 @@ import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { format } from 'date-fns';
-import { Sidebar } from '../../components/admin/Sidebar';
+import { AdminLayout } from '../../components/admin/AdminLayout';
 import { bookingService } from '../../services/bookingService';
 import { Booking } from '../../types';
 import { formatCurrency } from '../../utils/formatCurrency';
@@ -47,21 +47,14 @@ export const BookingManagement: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Sidebar />
-        <div className="lg:ml-56 p-6">
-          <p className="text-gray-600 dark:text-gray-400">Loading bookings...</p>
-        </div>
-      </div>
+      <AdminLayout>
+        <p className="text-gray-600 dark:text-gray-400">Loading bookings...</p>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Sidebar />
-      
-      <div className="lg:ml-56">
-        <div className="p-3 lg:p-6">
+    <AdminLayout>
            {/* Header */}
            <div className="mb-6">
              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
@@ -190,8 +183,6 @@ export const BookingManagement: React.FC = () => {
               </table>
             </div>
           </Card>
-        </div>
-      </div>
-    </div>
+        </AdminLayout>
   );
 };

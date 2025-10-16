@@ -4,7 +4,7 @@ import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Modal } from '../../components/common/Modal';
-import { Sidebar } from '../../components/admin/Sidebar';
+import { AdminLayout } from '../../components/admin/AdminLayout';
 import { AnimalForm } from '../../components/admin/AnimalForm';
 import { animalService } from '../../services/animalService';
 import { Animal } from '../../types';
@@ -67,12 +67,9 @@ export const AnimalManagement: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Sidebar />
-        <div className="lg:ml-56 p-6">
-          <p className="text-gray-600 dark:text-gray-400">Loading animals...</p>
-        </div>
-      </div>
+      <AdminLayout>
+        <p className="text-gray-600 dark:text-gray-400">Loading animals...</p>
+      </AdminLayout>
     );
   }
 
@@ -138,11 +135,7 @@ export const AnimalManagement: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Sidebar />
-      
-      <div className="lg:ml-56">
-        <div className="p-3 lg:p-6">
+    <AdminLayout>
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -464,9 +457,7 @@ export const AnimalManagement: React.FC = () => {
               />
             )}
           </Modal>
-        </div>
-      </div>
-    </div>
+    </AdminLayout>
   );
 };
 

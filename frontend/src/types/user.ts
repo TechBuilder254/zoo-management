@@ -12,8 +12,11 @@ export interface User {
   role: UserRole;
   favoriteAnimals?: string[];
   newsletterSubscribed?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
+  email_verified?: boolean; // Email verification status
+  created_at?: string; // Supabase format
+  updated_at?: string; // Supabase format
+  createdAt?: string; // Legacy format
+  updatedAt?: string; // Legacy format
 }
 
 export interface LoginCredentials {
@@ -30,6 +33,7 @@ export interface RegisterData {
   firstName?: string;
   lastName?: string;
   phone?: string;
+  newsletter?: boolean;
 }
 
 export interface AuthResponse {

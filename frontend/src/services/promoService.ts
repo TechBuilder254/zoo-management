@@ -89,6 +89,12 @@ export const promoService = {
     await api.delete(`/promos/${id}`);
   },
 
+  // Force delete promo code and all related bookings (Admin only - Dangerous)
+  forceDelete: async (id: string): Promise<{ message: string; deletedBookings: number }> => {
+    const response = await api.delete(`/promos/${id}/force`);
+    return response.data;
+  },
+
   // Validate promo code (Public) - Mock implementation
   validate: async (code: string, totalAmount: number): Promise<PromoValidationResult> => {
     // Mock promo code validation since no backend is running

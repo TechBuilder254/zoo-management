@@ -17,9 +17,13 @@ import ticketRoutes from './routes/ticketRoutes';
 import promoRoutes from './routes/promoRoutes';
 import financialRoutes from './routes/financialRoutes';
 import newsletterRoutes from './routes/newsletterRoutes';
+import settingsRoutes from './routes/settingsRoutes';
+import healthRoutes from './routes/healthRoutes';
 
 // Import middleware
 import { errorHandler, notFound } from './middleware/errorHandler';
+import { smartRateLimit } from './middleware/smartRateLimit';
+import { smartCache } from './middleware/cacheMiddleware';
 
 const app = express();
 
@@ -31,6 +35,12 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Apply smart rate limiting (only limits writes, not reads)
+app.use(smartRateLimit);
+
+// Apply smart caching for GET requests
+app.use('/api', smartCache);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -49,6 +59,8 @@ app.use('/api/tickets', ticketRoutes);
 app.use('/api/promos', promoRoutes);
 app.use('/api/financial', financialRoutes);
 app.use('/api/newsletter', newsletterRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/health', healthRoutes);
 
 // Error handling
 app.use(notFound);

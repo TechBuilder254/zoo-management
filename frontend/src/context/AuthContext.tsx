@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { User, LoginCredentials, RegisterData, AuthResponse } from '../types';
-import { authService } from '../services/authService';
+import { User, LoginCredentials, RegisterData } from '../types';
+import { supabaseAuthService, SupabaseAuthResponse } from '../services/supabaseAuthService';
+import { supabase } from '../config/supabase';
 import toast from 'react-hot-toast';
 
 interface AuthContextType {
@@ -12,6 +13,7 @@ interface AuthContextType {
   register: (data: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   updateUser: (user: User) => void;
+  resendVerification: (email: string) => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -26,73 +28,108 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Load user and token from localStorage on mount
-    const loadUserFromStorage = () => {
+    // Load user from Supabase session
+    const loadUserFromSupabase = async () => {
       try {
-        const storedToken = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('user');
-
-        if (storedToken && storedUser) {
-          setToken(storedToken);
-          setUser(JSON.parse(storedUser));
+        const user = await supabaseAuthService.getCurrentUser();
+        if (user) {
+          setUser(user);
+          // Get session token from Supabase
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.access_token) {
+            setToken(session.access_token);
+          }
         }
       } catch (error) {
-        console.error('Error loading user from storage:', error);
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        console.error('Error loading user from Supabase:', error);
       } finally {
         setIsLoading(false);
       }
     };
 
-    loadUserFromStorage();
+    loadUserFromSupabase();
+
+    // Listen to auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const user: User = {
+          id: session.user.id,
+          email: session.user.email || '',
+          name: session.user.user_metadata?.name || '',
+          role: session.user.user_metadata?.role || 'VISITOR',
+          phone: session.user.user_metadata?.phone || '',
+          email_verified: !!session.user.email_confirmed_at,
+          created_at: session.user.created_at || new Date().toISOString(),
+        };
+        setUser(user);
+        setToken(session.access_token);
+      } else {
+        setUser(null);
+        setToken(null);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (credentials: LoginCredentials): Promise<void> => {
     try {
-      const response: AuthResponse = await authService.login(credentials);
-      setToken(response.token);
-      setUser(response.user);
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      toast.success('Login successful!');
-    } catch (error) {
-      toast.error('Login failed. Please check your credentials.');
+      const response: SupabaseAuthResponse = await supabaseAuthService.login(credentials);
+      if (response.user) {
+        setUser(response.user);
+        setToken(response.session?.access_token || '');
+        toast.success('Login successful!');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Login failed. Please check your credentials.');
       throw error;
     }
   };
 
   const register = async (data: RegisterData): Promise<void> => {
     try {
-      const response: AuthResponse = await authService.register(data);
-      setToken(response.token);
-      setUser(response.user);
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.user));
-      toast.success('Registration successful!');
-    } catch (error) {
-      toast.error('Registration failed. Please try again.');
+      const response: SupabaseAuthResponse = await supabaseAuthService.register(data);
+      if (response.user) {
+        setUser(response.user);
+        setToken(response.session?.access_token || '');
+        toast.success('Registration successful!');
+      } else {
+        // User registered but email not verified yet
+        toast.success('Registration successful! Please check your email to verify your account.');
+      }
+    } catch (error: any) {
+      toast.error(error.message || 'Registration failed. Please try again.');
       throw error;
     }
   };
 
   const logout = async (): Promise<void> => {
     try {
-      await authService.logout();
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
+      await supabaseAuthService.logout();
       setUser(null);
       setToken(null);
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      toast.success('Logged out successfully');
+    } catch (error: any) {
+      console.error('Logout error:', error);
+      // Still clear local state even if logout fails
+      setUser(null);
+      setToken(null);
       toast.success('Logged out successfully');
     }
   };
 
   const updateUser = (updatedUser: User): void => {
     setUser(updatedUser);
-    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+
+  const resendVerification = async (email: string): Promise<void> => {
+    try {
+      await supabaseAuthService.resendVerification(email);
+      toast.success('Verification email sent! Check your inbox.');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to resend verification email');
+      throw error;
+    }
   };
 
   const value: AuthContextType = {
@@ -104,6 +141,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     register,
     logout,
     updateUser,
+    resendVerification,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

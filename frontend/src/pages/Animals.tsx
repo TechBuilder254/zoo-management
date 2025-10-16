@@ -8,7 +8,7 @@ import { AnimalFilters } from '../components/animals/AnimalFilters';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
 import { Container } from '../components/common/Container';
-import { useAnimals } from '../hooks/useAnimals';
+import { useAnimals } from '../hooks/useAnimalsQuery';
 
 type ViewMode = 'grid' | 'list';
 
@@ -23,7 +23,7 @@ export const Animals: React.FC = () => {
   // Debug log to verify view mode
   console.log('Current viewMode:', viewMode);
 
-  const { animals, loading, total, totalPages } = useAnimals({
+  const { data: animalsData, isLoading: loading } = useAnimals({
     search,
     type: selectedType,
     conservationStatus: selectedStatus,
@@ -31,6 +31,10 @@ export const Animals: React.FC = () => {
     page,
     limit: 12,
   });
+
+  const animals = (animalsData as any)?.animals || [];
+  const total = (animalsData as any)?.total || 0;
+  const totalPages = (animalsData as any)?.totalPages || 0;
 
   const handleSearch = useCallback((query: string) => {
     setSearch(query);
@@ -156,7 +160,7 @@ export const Animals: React.FC = () => {
                     <p className="text-gray-600 dark:text-gray-400">No animals found</p>
                   </Card>
                 ) : (
-                  animals.map((animal) => (
+                  animals.map((animal: any) => (
                     <Card key={animal.id || animal._id} padding="none" hover className="overflow-hidden">
                       <Link to={`/animals/${animal.id || animal._id}`} className="flex flex-col sm:flex-row">
                         <img

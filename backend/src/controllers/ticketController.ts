@@ -57,22 +57,22 @@ export const updateTicketPrice = async (req: AuthRequest, res: Response) => {
     const { type } = req.params;
     const { price, description } = req.body;
 
-    if (!price || price <= 0) {
+    if (!price || Number(price) <= 0) {
       return res.status(400).json({ error: 'Valid price is required' });
     }
 
     const updatedPrice = await prisma.ticketPrice.upsert({
-      where: { ticketType: type },
+      where: { ticket_type: type },
       update: {
-        price,
+        price: Number(price),
         description,
-        updatedAt: new Date()
+        updated_at: new Date()
       },
       create: {
-        ticketType: type,
-        price,
+        ticket_type: type,
+        price: Number(price),
         description,
-        isActive: true
+        is_active: true
       }
     });
 
@@ -93,18 +93,18 @@ export const createTicketPrice = async (req: AuthRequest, res: Response) => {
       return res.status(403).json({ error: 'Admin access required' });
     }
 
-    const { ticketType, price, description } = req.body;
+    const { ticket_type, price, description } = req.body;
 
-    if (!ticketType || !price || price <= 0) {
+    if (!ticket_type || !price || Number(price) <= 0) {
       return res.status(400).json({ error: 'Valid ticket type and price are required' });
     }
 
     const ticketPrice = await prisma.ticketPrice.create({
       data: {
-        ticketType,
-        price,
+        ticket_type,
+        price: Number(price),
         description,
-        isActive: true
+        is_active: true
       }
     });
 

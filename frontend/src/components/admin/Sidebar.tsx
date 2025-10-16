@@ -1,12 +1,21 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, PawPrint, Ticket, MessageSquare, BarChart3, Settings, LogOut, Users, Heart, Calendar, DollarSign, X, Tag } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
-export const Sidebar: React.FC = () => {
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+interface SidebarProps {
+  isMobileOpen: boolean;
+  onMobileClose: () => void;
+}
+
+export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose }) => {
   const location = useLocation();
   const { logout } = useAuth();
+
+  // Close mobile menu when route changes
+  useEffect(() => {
+    onMobileClose();
+  }, [location.pathname, onMobileClose]);
 
   const menuItems = [
     {
@@ -74,7 +83,7 @@ export const Sidebar: React.FC = () => {
       {isMobileOpen && (
         <div 
           className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setIsMobileOpen(false)}
+          onClick={onMobileClose}
         />
       )}
       
@@ -94,7 +103,7 @@ export const Sidebar: React.FC = () => {
             </div>
           </div>
           <button
-            onClick={() => setIsMobileOpen(false)}
+            onClick={onMobileClose}
             className="lg:hidden p-1 rounded-lg text-gray-400 hover:text-white hover:bg-gray-800"
           >
             <X size={20} />
@@ -107,7 +116,7 @@ export const Sidebar: React.FC = () => {
             <Link
               key={item.path}
               to={item.path}
-              onClick={() => setIsMobileOpen(false)}
+              onClick={onMobileClose}
               className={`
                 flex items-center space-x-2 px-2 py-1.5 rounded-lg transition-colors text-xs
                 ${

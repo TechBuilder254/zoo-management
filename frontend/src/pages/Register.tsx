@@ -32,7 +32,8 @@ export const Register: React.FC = () => {
         name: `${data.firstName} ${data.lastName}`.trim(),
       };
       await registerUser(registrationData);
-      navigate('/');
+      // Redirect to email verification page
+      navigate('/verify-email');
     } catch (error) {
       console.error('Registration error:', error);
     } finally {
@@ -134,6 +135,7 @@ export const Register: React.FC = () => {
                 type="checkbox"
                 id="newsletter"
                 className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary"
+                {...register('newsletter')}
               />
               <label
                 htmlFor="newsletter"

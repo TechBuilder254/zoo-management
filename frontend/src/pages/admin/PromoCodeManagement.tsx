@@ -4,7 +4,7 @@ import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Modal } from '../../components/common/Modal';
-import { Sidebar } from '../../components/admin/Sidebar';
+import { AdminLayout } from '../../components/admin/AdminLayout';
 import { promoService, PromoCode } from '../../services/promoService';
 import { formatCurrency } from '../../utils/formatCurrency';
 import toast from 'react-hot-toast';
@@ -60,9 +60,32 @@ export const PromoCodeManagement: React.FC = () => {
         toast.success('Promo code deleted successfully');
         const updatedPromos = await promoService.getAll();
         setPromoCodes(updatedPromos);
-      } catch (error) {
+      } catch (error: any) {
         console.error('Failed to delete promo code:', error);
-        toast.error('Failed to delete promo code');
+        
+        // Check if it's a foreign key constraint error
+        if (error.response?.status === 400 && error.response?.data?.bookingsCount) {
+          const bookingsCount = error.response.data.bookingsCount;
+          const shouldForceDelete = window.confirm(
+            `This promo code is being used by ${bookingsCount} booking(s). Do you want to force delete it? This will also delete all related bookings. This action cannot be undone.`
+          );
+          
+          if (shouldForceDelete) {
+            try {
+              const result = await promoService.forceDelete(id);
+              toast.success(result.message);
+              const updatedPromos = await promoService.getAll();
+              setPromoCodes(updatedPromos);
+            } catch (forceError) {
+              console.error('Failed to force delete promo code:', forceError);
+              toast.error('Failed to force delete promo code');
+            }
+          } else {
+            toast.error(`Cannot delete promo code. It is being used by ${bookingsCount} booking(s). Please deactivate it instead.`);
+          }
+        } else {
+          toast.error(error.response?.data?.error || 'Failed to delete promo code');
+        }
       }
     }
   };
@@ -139,26 +162,19 @@ export const PromoCodeManagement: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <Sidebar />
-        <div className="lg:ml-56 p-6">
-          <div className="flex items-center justify-center h-64">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-              <p className="text-gray-600 dark:text-gray-400">Loading promo codes...</p>
-            </div>
+      <AdminLayout>
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-400">Loading promo codes...</p>
           </div>
         </div>
-      </div>
+      </AdminLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <Sidebar />
-      
-      <div className="lg:ml-56">
-        <div className="p-3 lg:p-6">
+    <AdminLayout>
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
             <div>
@@ -312,9 +328,7 @@ export const PromoCodeManagement: React.FC = () => {
               />
             )}
           </Modal>
-        </div>
-      </div>
-    </div>
+        </AdminLayout>
   );
 };
 

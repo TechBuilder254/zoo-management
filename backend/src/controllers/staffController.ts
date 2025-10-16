@@ -39,8 +39,8 @@ export const getStaffById = async (req: Request, res: Response) => {
         name: true,
         email: true,
         role: true,
-        createdAt: true,
-        updatedAt: true,
+        created_at: true,
+        updated_at: true,
       },
     });
 
@@ -87,8 +87,8 @@ export const createStaff = async (req: Request, res: Response) => {
         name: true,
         email: true,
         role: true,
-        createdAt: true,
-        updatedAt: true,
+        created_at: true,
+        updated_at: true,
       },
     });
 
@@ -117,8 +117,8 @@ export const updateStaff = async (req: Request, res: Response) => {
         name: true,
         email: true,
         role: true,
-        createdAt: true,
-        updatedAt: true,
+        created_at: true,
+        updated_at: true,
       },
     });
 

@@ -68,14 +68,23 @@ export const getEventById = async (req: Request, res: Response) => {
 export const createEvent = async (req: AuthRequest, res: Response) => {
   try {
     const eventData = req.body;
+    console.log('Received event data:', eventData);
 
     const event = await prisma.event.create({
       data: {
-        ...eventData,
-        startDate: new Date(eventData.startDate),
-        endDate: new Date(eventData.endDate),
+        title: eventData.title,
+        description: eventData.description,
+        start_date: new Date(eventData.startDate || eventData.start_date),
+        end_date: new Date(eventData.endDate || eventData.end_date),
+        location: eventData.location,
+        image_url: eventData.imageUrl || eventData.image_url || null,
+        capacity: eventData.capacity,
+        price: eventData.price,
+        status: eventData.status || 'UPCOMING'
       },
     });
+
+    console.log('Created event:', event);
 
     // Invalidate event caches
     invalidateCache.events();
@@ -92,13 +101,33 @@ export const updateEvent = async (req: AuthRequest, res: Response) => {
     const { id } = req.params;
     const eventData = req.body;
 
+    const updateData: any = {};
+    
+    if (eventData.title !== undefined) updateData.title = eventData.title;
+    if (eventData.description !== undefined) updateData.description = eventData.description;
+    if (eventData.startDate || eventData.start_date) {
+      updateData.start_date = new Date(eventData.startDate || eventData.start_date);
+    }
+    if (eventData.endDate || eventData.end_date) {
+      updateData.end_date = new Date(eventData.endDate || eventData.end_date);
+    }
+    if (eventData.location !== undefined) updateData.location = eventData.location;
+    if (eventData.imageUrl !== undefined || eventData.image_url !== undefined) {
+      updateData.image_url = eventData.imageUrl || eventData.image_url;
+    }
+    if (eventData.capacity !== undefined) updateData.capacity = eventData.capacity;
+    if (eventData.price !== undefined) updateData.price = eventData.price;
+    if (eventData.status !== undefined) {
+      // Validate EventStatus values
+      const validStatuses = ['UPCOMING', 'ONGOING', 'COMPLETED', 'CANCELLED'];
+      if (validStatuses.includes(eventData.status)) {
+        updateData.status = eventData.status;
+      }
+    }
+
     const event = await prisma.event.update({
       where: { id },
-      data: {
-        ...eventData,
-        startDate: eventData.startDate ? new Date(eventData.startDate) : undefined,
-        endDate: eventData.endDate ? new Date(eventData.endDate) : undefined,
-      },
+      data: updateData,
     });
 
     // Invalidate event caches

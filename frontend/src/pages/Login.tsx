@@ -35,8 +35,12 @@ export const Login: React.FC = () => {
           navigate('/');
         }
       }, 100);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Login error:', error);
+      // If it's an email verification error, redirect to verification page
+      if (error.message?.includes('verify your email')) {
+        navigate('/verify-email');
+      }
     } finally {
       setIsLoading(false);
     }

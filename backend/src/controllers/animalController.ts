@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth';
-import { cacheManager, CacheKeys, invalidateCache } from '../utils/cache';
+import { redisCache, CacheKeys, CacheTTL, invalidateCache } from '../utils/redisCache';
 import { getPaginationParams, buildPaginatedResponse } from '../utils/pagination';
 
 export const getAllAnimals = async (req: Request, res: Response) => {
@@ -13,9 +13,10 @@ export const getAllAnimals = async (req: Request, res: Response) => {
     const queryParams = JSON.stringify({ category, status, search, page, limit });
     const cacheKey = CacheKeys.ANIMALS_FILTERED(queryParams);
 
-    // Check cache first
-    const cachedData = cacheManager.get(cacheKey);
+    // Check Redis cache first
+    const cachedData = await redisCache.get(cacheKey);
     if (cachedData) {
+      res.set('X-Cache', 'HIT');
       return res.json(cachedData);
     }
 
@@ -55,8 +56,9 @@ export const getAllAnimals = async (req: Request, res: Response) => {
     // Build paginated response
     const response = buildPaginatedResponse(animals, totalCount, page, limit);
 
-    // Cache the result for 10 minutes
-    cacheManager.set(cacheKey, response, 600);
+    // Cache the result in Redis for 1 hour (animals don't change often)
+    await redisCache.set(cacheKey, response, CacheTTL.ANIMALS);
+    res.set('X-Cache', 'MISS');
 
     res.json(response);
   } catch (error) {
@@ -69,10 +71,11 @@ export const getAnimalById = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
 
-    // Check cache first
+    // Check Redis cache first
     const cacheKey = CacheKeys.ANIMAL_BY_ID(id);
-    const cachedData = cacheManager.get(cacheKey);
+    const cachedData = await redisCache.get(cacheKey);
     if (cachedData) {
+      res.set('X-Cache', 'HIT');
       return res.json(cachedData);
     }
 
@@ -99,8 +102,9 @@ export const getAnimalById = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Animal not found' });
     }
 
-    // Cache for 10 minutes
-    cacheManager.set(cacheKey, animal, 600);
+    // Cache for 30 minutes in Redis
+    await redisCache.set(cacheKey, animal, CacheTTL.ANIMAL_DETAILS);
+    res.set('X-Cache', 'MISS');
 
     res.json(animal);
   } catch (error) {
@@ -280,7 +284,7 @@ export const getUserFavorites = async (req: AuthRequest, res: Response) => {
           },
         },
       },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { created_at: 'desc' },
     });
 
     res.json(favorites.map(fav => fav.animal));

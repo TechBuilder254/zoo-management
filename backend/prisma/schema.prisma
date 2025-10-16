@@ -243,3 +243,22 @@ enum DiscountType {
   PERCENTAGE
   FIXED_AMOUNT
 }
+
+model SystemSettings {
+  id                    String    @id @default("default")
+  site_name             String
+  site_description      String
+  max_booking_days      Int       @default(30)
+  max_booking_quantity  Int       @default(10)
+  maintenance_mode      Boolean   @default(false)
+  email_notifications   Boolean   @default(true)
+  sms_notifications     Boolean   @default(false)
+  auto_approve_bookings Boolean   @default(true)
+  currency              String    @default("USD")
+  timezone              String    @default("UTC")
+  language              String    @default("en")
+  created_at            DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@map("system_settings")
+}

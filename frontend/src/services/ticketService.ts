@@ -2,16 +2,16 @@ import api from './api';
 
 export interface TicketPrice {
   id: string;
-  ticketType: string;
+  ticket_type: string;
   price: number;
   description?: string;
-  isActive: boolean;
-  createdAt: string;
-  updatedAt: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface CreateTicketPriceData {
-  ticketType: string;
+  ticket_type: string;
   price: number;
   description?: string;
 }

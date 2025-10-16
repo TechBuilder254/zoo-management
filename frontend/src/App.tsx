@@ -4,9 +4,9 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { BookingProvider } from './context/BookingContext';
+import { QueryProvider } from './providers/QueryProvider';
 import { useAuth } from './hooks/useAuth';
 import { Navbar } from './components/common/Navbar';
-import { AdminNavbar } from './components/admin/AdminNavbar';
 import { Footer } from './components/common/Footer';
 import { Loader } from './components/common/Loader';
 import { ScrollToTop } from './components/common/ScrollToTop';
@@ -15,6 +15,7 @@ import { ScrollToTop } from './components/common/ScrollToTop';
 import { Home } from './pages/Home';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
+import { VerifyEmail } from './pages/VerifyEmail';
 import { Animals } from './pages/Animals';
 import { AnimalDetail } from './pages/AnimalDetail';
 import { Booking } from './pages/Booking';
@@ -26,8 +27,6 @@ import { Favorites } from './pages/Favorites';
 import { About } from './pages/About';
 import { Contact } from './pages/Contact';
 import { NotFound } from './pages/NotFound';
-import { TestAPI } from './pages/TestAPI';
-import { TestBackend } from './pages/TestBackend';
 
 // Admin pages
 import { Dashboard as AdminDashboard } from './pages/admin/Dashboard';
@@ -80,7 +79,7 @@ const AppLayout: React.FC<{ children: React.ReactNode; isAdminRoute: boolean }> 
   return (
     <div className="flex flex-col min-h-screen">
       <ScrollToTop />
-      {isAdminRoute ? <AdminNavbar /> : <Navbar />}
+      {!isAdminRoute && <Navbar />}
       <main className="flex-grow">
         {children}
       </main>
@@ -100,8 +99,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/test-api" element={<TestAPI />} />
-        <Route path="/test-backend" element={<TestBackend />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/animals" element={<Animals />} />
         <Route path="/animals/:id" element={<AnimalDetail />} />
         <Route path="/events" element={<Events />} />
@@ -250,37 +248,39 @@ const AppRoutes: React.FC = () => {
 const App: React.FC = () => {
   return (
     <Router>
-      <ThemeProvider>
-        <AuthProvider>
-          <BookingProvider>
-            <AppRoutes />
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 3000,
-                style: {
-                  background: '#363636',
-                  color: '#fff',
-                },
-                success: {
+      <QueryProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <BookingProvider>
+              <AppRoutes />
+              <Toaster
+                position="top-right"
+                toastOptions={{
                   duration: 3000,
-                  iconTheme: {
-                    primary: '#10B981',
-                    secondary: '#fff',
+                  style: {
+                    background: '#363636',
+                    color: '#fff',
                   },
-                },
-                error: {
-                  duration: 4000,
-                  iconTheme: {
-                    primary: '#EF4444',
-                    secondary: '#fff',
+                  success: {
+                    duration: 3000,
+                    iconTheme: {
+                      primary: '#10B981',
+                      secondary: '#fff',
+                    },
                   },
-                },
-              }}
-            />
-          </BookingProvider>
-        </AuthProvider>
-      </ThemeProvider>
+                  error: {
+                    duration: 4000,
+                    iconTheme: {
+                      primary: '#EF4444',
+                      secondary: '#fff',
+                    },
+                  },
+                }}
+              />
+            </BookingProvider>
+          </AuthProvider>
+        </ThemeProvider>
+      </QueryProvider>
     </Router>
   );
 };

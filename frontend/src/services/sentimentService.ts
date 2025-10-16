@@ -125,6 +125,7 @@ class SentimentService {
   }
 }
 
-export default new SentimentService();
+const sentimentService = new SentimentService();
+export default sentimentService;
 
 

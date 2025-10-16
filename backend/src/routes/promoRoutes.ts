@@ -6,6 +6,7 @@ import {
   createPromoCode,
   updatePromoCode,
   deletePromoCode,
+  forceDeletePromoCode,
   validatePromoCode
 } from '../controllers/promoController';
 
@@ -21,5 +22,6 @@ router.get('/:id', getPromoCodeById);
 router.post('/', createPromoCode);
 router.put('/:id', updatePromoCode);
 router.delete('/:id', deletePromoCode);
+router.delete('/:id/force', forceDeletePromoCode);
 
 export default router;

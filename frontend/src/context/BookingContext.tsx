@@ -43,9 +43,9 @@ export const BookingProvider: React.FC<BookingProviderProps> = ({ children }) =>
         };
         
         prices.forEach((price: TicketPrice) => {
-          if (price.ticketType === 'adult') priceMap.adult = price.price;
-          if (price.ticketType === 'child') priceMap.child = price.price;
-          if (price.ticketType === 'senior') priceMap.senior = price.price;
+          if (price.ticket_type === 'adult') priceMap.adult = price.price;
+          if (price.ticket_type === 'child') priceMap.child = price.price;
+          if (price.ticket_type === 'senior') priceMap.senior = price.price;
         });
         
         setTicketPrices(priceMap);
