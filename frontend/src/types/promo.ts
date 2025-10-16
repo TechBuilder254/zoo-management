@@ -33,3 +33,4 @@ export interface UpdatePromoCodeData {
   valid_from?: string;
   valid_until?: string;
 }
+

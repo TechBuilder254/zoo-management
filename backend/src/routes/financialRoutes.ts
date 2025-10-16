@@ -14,3 +14,4 @@ router.get('/data', getFinancialData);
 router.get('/summary', getFinancialSummary);
 
 export default router;
+

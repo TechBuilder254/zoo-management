@@ -390,7 +390,7 @@ export const AnimalManagement: React.FC = () => {
                   <img
                     src={selectedAnimal.image_url || selectedAnimal.imageUrl || `https://images.unsplash.com/photo-${getRandomAnimalImage(selectedAnimal.category)}?w=100&h=100&fit=crop&crop=center`}
                     alt={selectedAnimal.name}
-                    className="w-16 h-16 rounded-lg object-cover"
+                    className="w-16 h-16 rounded-lg object-cover border border-gray-200 dark:border-gray-700"
                     onError={(e) => {
                       e.currentTarget.src = `https://images.unsplash.com/photo-${getRandomAnimalImage(selectedAnimal.category)}?w=100&h=100&fit=crop&crop=center`;
                     }}

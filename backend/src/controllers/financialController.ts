@@ -306,3 +306,4 @@ export const getFinancialSummary = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Error fetching financial summary' });
   }
 };
+
