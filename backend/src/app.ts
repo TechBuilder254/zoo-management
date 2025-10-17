@@ -20,6 +20,7 @@ import newsletterRoutes from './routes/newsletterRoutes';
 import settingsRoutes from './routes/settingsRoutes';
 import healthRoutes from './routes/healthRoutes';
 import configRoutes from './routes/configRoutes';
+import systemHealthRoutes from './routes/systemHealth';
 
 // Import middleware
 import { errorHandler, notFound } from './middleware/errorHandler';
@@ -68,6 +69,9 @@ app.use('/api', smartCache);
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Zoo API is running!' });
 });
+
+// System health check with detailed status
+app.use('/api/health', systemHealthRoutes);
 
 // API Routes
 app.use('/api/auth', authRoutes);

@@ -10,6 +10,7 @@ import { Navbar } from './components/common/Navbar';
 import { Footer } from './components/common/Footer';
 import { Loader } from './components/common/Loader';
 import { ScrollToTop } from './components/common/ScrollToTop';
+import ConnectionStatus from './components/common/ConnectionStatus';
 
 // Pages
 import { Home } from './pages/Home';
@@ -253,6 +254,7 @@ const App: React.FC = () => {
           <AuthProvider>
             <BookingProvider>
               <AppRoutes />
+              <ConnectionStatus />
               <Toaster
                 position="top-right"
                 toastOptions={{
