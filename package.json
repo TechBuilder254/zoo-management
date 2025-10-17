@@ -1,5 +1,19 @@
 {
-  "devDependencies": {
-    "ajv-keywords": "^5.1.0"
+  "name": "wildlife-zoo-system",
+  "version": "1.0.0",
+  "description": "Wildlife Zoo Management System",
+  "main": "api/index.js",
+  "scripts": {
+    "dev": "cd frontend && npm start",
+    "build": "cd frontend && npm run build",
+    "start": "node api/index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
