@@ -3,6 +3,7 @@
 import { HfInference } from '@huggingface/inference';
 import { SentimentResult } from '../types/ai';
 import aiService from './aiService';
+import configService from './configService';
 
 class SentimentService {
   private hf: HfInference | null = null;
@@ -10,7 +11,7 @@ class SentimentService {
   private cacheTTL = 10 * 60 * 1000; // 10 minutes
 
   constructor() {
-    const apiKey = process.env.REACT_APP_HUGGINGFACE_API_KEY;
+    const apiKey = configService.get('REACT_APP_HUGGINGFACE_API_KEY');
     if (apiKey) {
       this.hf = new HfInference(apiKey);
     }

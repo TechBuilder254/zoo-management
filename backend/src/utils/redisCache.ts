@@ -25,11 +25,19 @@ class HybridCacheManager {
 
   private async initializeRedis() {
     try {
-      // Initialize Redis client with connection pooling
+      // Check if we have Upstash REST API credentials
+      if (process.env.REDIS_REST_URL && process.env.REDIS_REST_TOKEN) {
+        console.log('🔗 Using Upstash Redis REST API...');
+        this.isRedisAvailable = true;
+        this.isConnected = true;
+        return;
+      }
+
+      // Fallback to direct Redis connection
       let redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
       
-      // Convert redis:// to rediss:// for Upstash TLS connections
-      if (redisUrl.includes('upstash.io') && redisUrl.startsWith('redis://')) {
+      // For Upstash Redis, ensure we use rediss:// for TLS
+      if (redisUrl.includes('upstash.io') && !redisUrl.startsWith('rediss://')) {
         redisUrl = redisUrl.replace('redis://', 'rediss://');
       }
       
@@ -37,7 +45,8 @@ class HybridCacheManager {
         url: redisUrl,
         socket: {
           reconnectStrategy: (retries) => Math.min(retries * 50, 1000),
-          connectTimeout: 10000, // Increased timeout for cloud connections
+          connectTimeout: 10000,
+          lazyConnect: true,
         },
         database: 0,
       });
@@ -63,8 +72,14 @@ class HybridCacheManager {
         this.isConnected = false;
       });
 
-      // Try to connect to Redis
-      await this.connect();
+      // Try to connect to Redis, but don't fail if it doesn't work
+      try {
+        await this.connect();
+      } catch (error) {
+        console.warn('⚠️  Redis connection failed, using fallback cache:', error);
+        this.isRedisAvailable = false;
+        this.isConnected = false;
+      }
     } catch (error: any) {
       console.warn('⚠️  Redis initialization failed, using fallback cache:', error?.message || error);
       this.isRedisAvailable = false;
@@ -73,22 +88,43 @@ class HybridCacheManager {
   }
 
   private async connect(): Promise<void> {
-    try {
-      if (this.redisClient) {
-        await this.redisClient.connect();
-      }
-    } catch (error: any) {
-      console.warn('Failed to connect to Redis, using fallback cache:', error?.message || error);
-      this.isConnected = false;
-      this.isRedisAvailable = false;
+    if (!this.redisClient) {
+      throw new Error('Redis client not initialized');
     }
+
+    // Connect with timeout
+    const connectPromise = this.redisClient.connect();
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Redis connection timeout')), 15000)
+    );
+    
+    await Promise.race([connectPromise, timeoutPromise]);
   }
 
   /**
    * Get a value from cache
    */
   async get<T>(key: string): Promise<T | null> {
-    // Try Redis first if available
+    // Try Upstash REST API first
+    if (this.isRedisAvailable && process.env.REDIS_REST_URL && process.env.REDIS_REST_TOKEN) {
+      try {
+        const response = await fetch(`${process.env.REDIS_REST_URL}/get/${encodeURIComponent(key)}`, {
+          headers: {
+            'Authorization': `Bearer ${process.env.REDIS_REST_TOKEN}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          return data.result ? JSON.parse(data.result) : null;
+        }
+      } catch (error: any) {
+        console.warn('Upstash REST API GET error, using fallback:', error?.message || error);
+      }
+    }
+
+    // Try direct Redis connection if available
     if (this.isConnected && this.redisClient) {
       try {
         const value = await this.redisClient.get(key);
@@ -102,17 +138,37 @@ class HybridCacheManager {
     try {
       const value = this.fallbackCache.get<T>(key);
       return value || null;
-      } catch (error: any) {
-        console.error('Fallback cache GET error:', error?.message || error);
-        return null;
-      }
+    } catch (error: any) {
+      console.error('Fallback cache GET error:', error?.message || error);
+      return null;
+    }
   }
 
   /**
    * Set a value in cache with TTL
    */
   async set<T>(key: string, value: T, ttlSeconds: number = 300): Promise<boolean> {
-    // Try Redis first if available
+    // Try Upstash REST API first
+    if (this.isRedisAvailable && process.env.REDIS_REST_URL && process.env.REDIS_REST_TOKEN) {
+      try {
+        const response = await fetch(`${process.env.REDIS_REST_URL}/setex/${encodeURIComponent(key)}/${ttlSeconds}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.REDIS_REST_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ value: JSON.stringify(value) })
+        });
+        
+        if (response.ok) {
+          return true;
+        }
+      } catch (error: any) {
+        console.warn('Upstash REST API SET error, using fallback:', error?.message || error);
+      }
+    }
+
+    // Try direct Redis connection if available
     if (this.isConnected && this.redisClient) {
       try {
         await this.redisClient.setEx(key, ttlSeconds, JSON.stringify(value));

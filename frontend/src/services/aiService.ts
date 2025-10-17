@@ -1,17 +1,18 @@
 // Base AI Service with common utilities
 
 import { AIConfig } from '../types/ai';
+import configService from './configService';
 
 class AIService {
   private config: AIConfig;
 
   constructor() {
     this.config = {
-      enableSentiment: process.env.REACT_APP_ENABLE_SENTIMENT_ANALYSIS === 'true',
-      enableModeration: process.env.REACT_APP_ENABLE_CONTENT_MODERATION === 'true',
-      enableChatbot: process.env.REACT_APP_ENABLE_CHATBOT === 'true',
-      sentimentThreshold: parseFloat(process.env.REACT_APP_SENTIMENT_THRESHOLD || '0.7'),
-      toxicityThreshold: parseFloat(process.env.REACT_APP_TOXICITY_THRESHOLD || '0.8'),
+      enableSentiment: configService.get('REACT_APP_ENABLE_SENTIMENT_ANALYSIS') === true,
+      enableModeration: configService.get('REACT_APP_ENABLE_CONTENT_MODERATION') === true,
+      enableChatbot: configService.get('REACT_APP_ENABLE_CHATBOT') === true,
+      sentimentThreshold: configService.get('REACT_APP_SENTIMENT_THRESHOLD') || 0.7,
+      toxicityThreshold: configService.get('REACT_APP_TOXICITY_THRESHOLD') || 0.8,
     };
   }
 

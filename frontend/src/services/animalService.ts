@@ -28,21 +28,58 @@ export const animalService = {
     if (filters?.page) params.append('page', filters.page.toString());
     if (filters?.limit) params.append('limit', filters.limit.toString());
 
-    const response = await api.get<PaginatedResponse<Animal>>(`/animals?${params.toString()}`);
+    const response = await api.get<any>(`/animals?${params.toString()}`);
+    console.log('Animals API Response:', response.data);
+    
+    let responseData: PaginatedResponse<Animal>;
+    
+    // Handle Redis-wrapped response format
+    if (response.data && typeof response.data === 'object' && 'value' in response.data) {
+      try {
+        const parsedData = JSON.parse(response.data.value);
+        responseData = parsedData;
+        console.log('Parsed animals data from Redis wrapper:', responseData);
+      } catch (error) {
+        console.error('Error parsing animals data:', error);
+        return {
+          animals: [],
+          total: 0,
+          page: 1,
+          totalPages: 0,
+          hasNext: false,
+          hasPrev: false,
+        };
+      }
+    } else {
+      responseData = response.data;
+      console.log('Direct animals data:', responseData);
+    }
     
     // Backend now returns paginated response
     return {
-      animals: response.data.data,
-      total: response.data.pagination.totalItems,
-      page: response.data.pagination.currentPage,
-      totalPages: response.data.pagination.totalPages,
-      hasNext: response.data.pagination.hasNext,
-      hasPrev: response.data.pagination.hasPrev,
+      animals: responseData.data,
+      total: responseData.pagination.totalItems,
+      page: responseData.pagination.currentPage,
+      totalPages: responseData.pagination.totalPages,
+      hasNext: responseData.pagination.hasNext,
+      hasPrev: responseData.pagination.hasPrev,
     };
   },
 
   getById: async (id: string): Promise<Animal> => {
-    const response = await api.get<Animal>(`/animals/${id}`);
+    const response = await api.get<any>(`/animals/${id}`);
+    
+    // Handle Redis-wrapped response format
+    if (response.data && typeof response.data === 'object' && 'value' in response.data) {
+      try {
+        const parsedData = JSON.parse(response.data.value);
+        return parsedData;
+      } catch (error) {
+        console.error('Error parsing animal data:', error);
+        throw new Error('Failed to parse animal data');
+      }
+    }
+    
     return response.data;
   },
 

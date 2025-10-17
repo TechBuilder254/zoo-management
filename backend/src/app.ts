@@ -19,6 +19,7 @@ import financialRoutes from './routes/financialRoutes';
 import newsletterRoutes from './routes/newsletterRoutes';
 import settingsRoutes from './routes/settingsRoutes';
 import healthRoutes from './routes/healthRoutes';
+import configRoutes from './routes/configRoutes';
 
 // Import middleware
 import { errorHandler, notFound } from './middleware/errorHandler';
@@ -27,9 +28,30 @@ import { smartCache } from './middleware/cacheMiddleware';
 
 const app = express();
 
-// Middleware
+// Middleware - Dynamic CORS based on environment
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://localhost:3000',
+  'https://widlife-zoo-system.vercel.app'
+];
+
+// Add FRONTEND_URL if it's different from the defaults
+if (process.env.FRONTEND_URL && !allowedOrigins.includes(process.env.FRONTEND_URL)) {
+  allowedOrigins.push(process.env.FRONTEND_URL);
+}
+
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
 }));
 
@@ -61,6 +83,7 @@ app.use('/api/financial', financialRoutes);
 app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/health', healthRoutes);
+app.use('/api/config', configRoutes);
 
 // Error handling
 app.use(notFound);

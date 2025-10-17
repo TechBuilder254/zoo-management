@@ -21,7 +21,6 @@ model User {
   reviews    Review[]
 
   @@index([role], map: "idx_users_role")
-  @@index([created_at], map: "idx_users_created_at")
   @@map("users")
 }
 
@@ -72,10 +71,8 @@ model Review {
   @@index([status], map: "idx_reviews_status")
   @@index([user_id], map: "idx_reviews_user_id")
   @@index([rating], map: "idx_reviews_rating")
-  @@index([created_at], map: "idx_reviews_created_at")
   @@index([sentiment], map: "idx_reviews_sentiment")
   @@index([animal_id, status], map: "idx_reviews_animal_status")
-  @@index([animal_id, created_at], map: "idx_reviews_animal_created")
   @@map("reviews")
 }
 
@@ -203,8 +200,26 @@ model PromoCode {
   @@index([is_active], map: "idx_promo_codes_active")
   @@index([valid_from], map: "idx_promo_codes_valid_from")
   @@index([valid_until], map: "idx_promo_codes_valid_until")
-  @@index([is_active, valid_from, valid_until], map: "idx_promo_codes_active_valid")
   @@map("promo_codes")
+}
+
+model SystemSettings {
+  id                    String    @id @default("default")
+  site_name             String
+  site_description      String
+  max_booking_days      Int       @default(30)
+  max_booking_quantity  Int       @default(10)
+  maintenance_mode      Boolean   @default(false)
+  email_notifications   Boolean   @default(true)
+  sms_notifications     Boolean   @default(false)
+  auto_approve_bookings Boolean   @default(true)
+  currency              String    @default("USD")
+  timezone              String    @default("UTC")
+  language              String    @default("en")
+  created_at            DateTime? @default(now()) @db.Timestamptz(6)
+  updated_at            DateTime? @default(now()) @db.Timestamptz(6)
+
+  @@map("system_settings")
 }
 
 enum Role {
@@ -242,23 +257,4 @@ enum EventStatus {
 enum DiscountType {
   PERCENTAGE
   FIXED_AMOUNT
-}
-
-model SystemSettings {
-  id                    String    @id @default("default")
-  site_name             String
-  site_description      String
-  max_booking_days      Int       @default(30)
-  max_booking_quantity  Int       @default(10)
-  maintenance_mode      Boolean   @default(false)
-  email_notifications   Boolean   @default(true)
-  sms_notifications     Boolean   @default(false)
-  auto_approve_bookings Boolean   @default(true)
-  currency              String    @default("USD")
-  timezone              String    @default("UTC")
-  language              String    @default("en")
-  created_at            DateTime? @default(now()) @db.Timestamptz(6)
-  updated_at            DateTime? @default(now()) @db.Timestamptz(6)
-
-  @@map("system_settings")
 }

@@ -66,12 +66,23 @@ export const eventService = {
     try {
       const params = status ? { status } : {};
       const response = await api.get('/events', { params });
-      console.log('Events API Response:', response.data);
       
-      // Handle both array and object responses
-      const backendEvents: BackendEvent[] = Array.isArray(response.data) 
-        ? response.data 
-        : response.data.data || [];
+      let backendEvents: BackendEvent[] = [];
+      
+      // Handle Redis-wrapped response format
+      if (response.data && response.data.value) {
+        try {
+          const parsedData = JSON.parse(response.data.value);
+          backendEvents = Array.isArray(parsedData) ? parsedData : parsedData.data || [];
+        } catch (error) {
+          console.error('Error parsing events data:', error);
+          return [];
+        }
+      } else if (Array.isArray(response.data)) {
+        backendEvents = response.data;
+      } else if (response.data && response.data.data) {
+        backendEvents = response.data.data;
+      }
       
       console.log(`Fetched ${backendEvents.length} events from backend`);
       return backendEvents.map(mapBackendEventToFrontend);
@@ -85,11 +96,23 @@ export const eventService = {
   getUpcoming: async (): Promise<Event[]> => {
     try {
       const response = await api.get('/events');
-      console.log('Upcoming Events API Response:', response.data);
       
-      const backendEvents: BackendEvent[] = Array.isArray(response.data)
-        ? response.data
-        : response.data.data || [];
+      let backendEvents: BackendEvent[] = [];
+      
+      // Handle Redis-wrapped response format
+      if (response.data && response.data.value) {
+        try {
+          const parsedData = JSON.parse(response.data.value);
+          backendEvents = Array.isArray(parsedData) ? parsedData : parsedData.data || [];
+        } catch (error) {
+          console.error('Error parsing upcoming events data:', error);
+          return [];
+        }
+      } else if (Array.isArray(response.data)) {
+        backendEvents = response.data;
+      } else if (response.data && response.data.data) {
+        backendEvents = response.data.data;
+      }
       
       console.log(`Total events from backend: ${backendEvents.length}`);
       

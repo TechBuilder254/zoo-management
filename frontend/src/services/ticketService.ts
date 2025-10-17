@@ -25,7 +25,20 @@ export const ticketService = {
   // Get all ticket prices
   getAll: async (): Promise<TicketPrice[]> => {
     const response = await api.get('/tickets');
-    return response.data;
+    
+    // Handle Redis-wrapped response format
+    if (response.data && response.data.value) {
+      try {
+        const parsedData = JSON.parse(response.data.value);
+        return Array.isArray(parsedData) ? parsedData : [];
+      } catch (error) {
+        console.error('Error parsing ticket data:', error);
+        return [];
+      }
+    }
+    
+    // Handle direct array response
+    return Array.isArray(response.data) ? response.data : [];
   },
 
   // Get ticket price by type

@@ -1,5 +1,6 @@
 import { supabase, getEmailRedirectUrl } from '../config/supabase';
 import { User, LoginCredentials, RegisterData } from '../types';
+import configService from './configService';
 
 export interface SupabaseAuthResponse {
   user: User | null;
@@ -153,7 +154,7 @@ export const supabaseAuthService = {
   resetPassword: async (email: string): Promise<void> => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${process.env.REACT_APP_EMAIL_REDIRECT_URL || window.location.origin}/reset-password`,
+        redirectTo: `${configService.get('REACT_APP_EMAIL_REDIRECT_URL') || window.location.origin}/reset-password`,
       });
 
       if (error) {
