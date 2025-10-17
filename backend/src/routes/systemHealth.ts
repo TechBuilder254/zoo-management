@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { PrismaClient } from '@prisma/client';
-import redisCache from '../utils/redisCache';
+import { redisCache } from '../utils/redisCache';
 
 const router = Router();
 const prisma = new PrismaClient();

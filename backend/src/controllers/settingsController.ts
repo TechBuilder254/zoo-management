@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { prisma } from '../config/database';
+import prisma from '../config/database';
 import { AuthRequest } from '../middleware/auth';
 
 export const getSettings = async (req: AuthRequest, res: Response) => {
@@ -162,7 +162,7 @@ export const clearAllData = async (req: AuthRequest, res: Response) => {
     }
 
     // Clear all data in the correct order (respecting foreign key constraints)
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // Delete in reverse dependency order
       await tx.favorite.deleteMany();
       await tx.review.deleteMany();

@@ -46,7 +46,6 @@ class HybridCacheManager {
         socket: {
           reconnectStrategy: (retries) => Math.min(retries * 50, 1000),
           connectTimeout: 10000,
-          lazyConnect: true,
         },
         database: 0,
       });

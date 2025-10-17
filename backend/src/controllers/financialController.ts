@@ -11,8 +11,8 @@ export const getFinancialData = async (req: Request, res: Response) => {
     const endDate = new Date();
     
     if (period === 'monthly') {
-      startDate.setFullYear(year, 0, 1); // Start of year
-      endDate.setFullYear(year, 11, 31); // End of year
+      startDate.setFullYear(Number(year), 0, 1); // Start of year
+      endDate.setFullYear(Number(year), 11, 31); // End of year
     } else if (period === 'weekly') {
       startDate.setDate(startDate.getDate() - 7);
     } else if (period === 'daily') {
@@ -55,8 +55,8 @@ export const getFinancialData = async (req: Request, res: Response) => {
     // Revenue by month (for charts)
     const monthlyRevenue = [];
     for (let month = 0; month < 12; month++) {
-      const monthStart = new Date(year, month, 1);
-      const monthEnd = new Date(year, month + 1, 0);
+      const monthStart = new Date(Number(year), month, 1);
+      const monthEnd = new Date(Number(year), month + 1, 0);
       
       const monthRevenue = await prisma.booking.aggregate({
         where: {
@@ -143,7 +143,7 @@ export const getFinancialData = async (req: Request, res: Response) => {
       },
     });
 
-    const totalDiscounts = promoUsage.reduce((sum, promo) => sum + (promo._sum.discount_amount || 0), 0);
+    const totalDiscounts = promoUsage.reduce((sum: number, promo: any) => sum + (promo._sum.discount_amount || 0), 0);
 
     // 7. Top performing animals (by bookings)
     const animalPerformance = await prisma.animal.findMany({
