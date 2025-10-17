@@ -287,7 +287,7 @@ export const getUserFavorites = async (req: AuthRequest, res: Response) => {
       orderBy: { created_at: 'desc' },
     });
 
-    res.json(favorites.map(fav => fav.animal));
+    res.json(favorites.map((fav: any) => fav.animal));
   } catch (error) {
     console.error('Get favorites error:', error);
     res.status(500).json({ error: 'Error fetching favorites' });

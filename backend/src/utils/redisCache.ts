@@ -115,7 +115,7 @@ class HybridCacheManager {
         });
         
         if (response.ok) {
-          const data = await response.json();
+          const data = await response.json() as any;
           return data.result ? JSON.parse(data.result) : null;
         }
       } catch (error: any) {

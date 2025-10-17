@@ -112,7 +112,7 @@ export const createTicketPrice = async (req: AuthRequest, res: Response) => {
     invalidateCache.tickets();
 
     res.status(201).json(ticketPrice);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create ticket price error:', error);
     if (error.code === 'P2002') {
       return res.status(400).json({ error: 'Ticket type already exists' });

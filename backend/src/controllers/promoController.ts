@@ -13,7 +13,7 @@ export const getAllPromoCodes = async (req: AuthRequest, res: Response) => {
       orderBy: { created_at: 'desc' }
     });
     res.json(promoCodes);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get promo codes error:', error);
     res.status(500).json({ error: 'Error fetching promo codes' });
   }
@@ -45,7 +45,7 @@ export const getPromoCodeById = async (req: AuthRequest, res: Response) => {
     }
 
     res.json(promoCode);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Get promo code error:', error);
     res.status(500).json({ error: 'Error fetching promo code' });
   }
@@ -104,7 +104,7 @@ export const createPromoCode = async (req: AuthRequest, res: Response) => {
     });
 
     res.status(201).json(promoCode);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create promo code error:', error);
     if (error.code === 'P2002') {
       return res.status(400).json({ error: 'Promo code already exists' });
@@ -148,7 +148,7 @@ export const updatePromoCode = async (req: AuthRequest, res: Response) => {
     });
 
     res.json(promoCode);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Update promo code error:', error);
     if (error.code === 'P2002') {
       return res.status(400).json({ error: 'Promo code already exists' });
@@ -183,7 +183,7 @@ export const deletePromoCode = async (req: AuthRequest, res: Response) => {
     });
 
     res.json({ message: 'Promo code deleted successfully' });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Delete promo code error:', error);
     
     // Handle foreign key constraint errors specifically
@@ -212,7 +212,7 @@ export const forceDeletePromoCode = async (req: AuthRequest, res: Response) => {
     });
 
     // Delete all related bookings first, then the promo code
-    await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx: any) => {
       // Delete all bookings that use this promo code
       await tx.booking.deleteMany({
         where: { promo_code_id: id }
@@ -228,7 +228,7 @@ export const forceDeletePromoCode = async (req: AuthRequest, res: Response) => {
       message: `Promo code and ${bookingsCount} related booking(s) deleted successfully`,
       deletedBookings: bookingsCount
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Force delete promo code error:', error);
     res.status(500).json({ error: 'Error force deleting promo code' });
   }
@@ -291,7 +291,7 @@ export const validatePromoCode = async (req: Request, res: Response) => {
       originalAmount: totalAmount,
       finalAmount
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Validate promo code error:', error);
     res.status(500).json({ error: 'Error validating promo code' });
   }
@@ -308,7 +308,7 @@ export const usePromoCode = async (promoCodeId: string) => {
         }
       }
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Use promo code error:', error);
     throw error;
   }
