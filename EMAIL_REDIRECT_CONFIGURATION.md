@@ -165,3 +165,4 @@ REACT_APP_STRIPE_PUBLIC_KEY=your-stripe-public-key
 ```
 
 This will ensure that email verification links work correctly! 🎉
+

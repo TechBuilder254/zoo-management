@@ -69,3 +69,4 @@ echo.
 echo 🚀 You can now start your backend server with Redis caching enabled!
 echo.
 pause
+
