@@ -144,11 +144,11 @@ export const createAnimal = async (req: AuthRequest, res: Response) => {
         category,
         habitat,
         description,
-        imageUrl: imageUrl || '',
+        image_url: imageUrl || '',
         diet,
         lifespan,
         status,
-        location: null, // Optional field
+        location: undefined, // Optional field
       },
     });
 
@@ -232,9 +232,9 @@ export const toggleFavorite = async (req: AuthRequest, res: Response) => {
     // Check if already favorited
     const existing = await prisma.favorite.findUnique({
       where: {
-        userId_animalId: {
-          userId,
-          animalId,
+        user_id_animal_id: {
+          user_id: userId,
+          animal_id: animalId,
         },
       },
     });
@@ -253,8 +253,8 @@ export const toggleFavorite = async (req: AuthRequest, res: Response) => {
       // Add to favorites
       await prisma.favorite.create({
         data: {
-          userId,
-          animalId,
+          user_id: userId,
+          animal_id: animalId,
         },
       });
       
@@ -274,9 +274,9 @@ export const getUserFavorites = async (req: AuthRequest, res: Response) => {
     const userId = req.user!.id;
 
     const favorites = await prisma.favorite.findMany({
-      where: { userId },
+      where: { user_id: userId },
       include: {
-        animal: {
+        animals: {
           include: {
             _count: {
               select: { reviews: true },
@@ -287,7 +287,7 @@ export const getUserFavorites = async (req: AuthRequest, res: Response) => {
       orderBy: { created_at: 'desc' },
     });
 
-    res.json(favorites.map((fav: any) => fav.animal));
+    res.json(favorites.map((fav: any) => fav.animals));
   } catch (error) {
     console.error('Get favorites error:', error);
     res.status(500).json({ error: 'Error fetching favorites' });

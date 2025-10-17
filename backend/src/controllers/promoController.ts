@@ -32,7 +32,7 @@ export const getPromoCodeById = async (req: AuthRequest, res: Response) => {
       include: {
         bookings: {
           include: {
-            user: {
+            users: {
               select: { id: true, name: true, email: true }
             }
           }
@@ -259,21 +259,21 @@ export const validatePromoCode = async (req: Request, res: Response) => {
 
     // Check validity dates
     const now = new Date();
-    if (now < promoCode.validFrom || now > promoCode.validUntil) {
+    if (now < promoCode.valid_from || now > promoCode.valid_until) {
       return res.status(400).json({ error: 'Promo code has expired' });
     }
 
     // Check usage limits
-    if (promoCode.maxUses && promoCode.usedCount >= promoCode.maxUses) {
+    if (promoCode.max_uses && promoCode.used_count >= promoCode.max_uses) {
       return res.status(400).json({ error: 'Promo code has reached maximum usage limit' });
     }
 
     // Calculate discount
     let discountAmount = 0;
-    if (promoCode.discountType === 'PERCENTAGE') {
-      discountAmount = (totalAmount * promoCode.discountValue) / 100;
+    if (promoCode.discount_type === 'PERCENTAGE') {
+      discountAmount = (totalAmount * promoCode.discount_value) / 100;
     } else {
-      discountAmount = Math.min(promoCode.discountValue, totalAmount);
+      discountAmount = Math.min(promoCode.discount_value, totalAmount);
     }
 
     const finalAmount = Math.max(0, totalAmount - discountAmount);
@@ -284,8 +284,8 @@ export const validatePromoCode = async (req: Request, res: Response) => {
         id: promoCode.id,
         code: promoCode.code,
         description: promoCode.description,
-        discountType: promoCode.discountType,
-        discountValue: promoCode.discountValue
+        discount_type: promoCode.discount_type,
+        discount_value: promoCode.discount_value
       },
       discountAmount,
       originalAmount: totalAmount,
@@ -303,7 +303,7 @@ export const usePromoCode = async (promoCodeId: string) => {
     await prisma.promoCode.update({
       where: { id: promoCodeId },
       data: {
-        usedCount: {
+        used_count: {
           increment: 1
         }
       }

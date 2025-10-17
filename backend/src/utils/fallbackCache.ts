@@ -94,7 +94,7 @@ class FallbackCacheManager {
     try {
       if (keys.length === 0) return [];
       const values = this.cache.mget(keys);
-      return keys.map(key => values[key] || null);
+      return keys.map(key => (values[key] as T) || null);
     } catch (error) {
       console.error('Fallback cache MGET error:', error);
       return [];
@@ -189,7 +189,7 @@ class FallbackCacheManager {
       };
     } catch (error) {
       console.error('Fallback cache STATS error:', error);
-      return { connected: false, error: error.message };
+      return { connected: false, error: (error as Error).message };
     }
   }
 

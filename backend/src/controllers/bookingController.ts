@@ -53,14 +53,14 @@ export const createBooking = async (req: AuthRequest, res: Response) => {
 
     const booking = await prisma.booking.create({
       data: {
-        visitDate: new Date(visitDate),
-        ticketType: ticketType.trim(),
+        visit_date: new Date(visitDate),
+        ticket_type: ticketType.trim(),
         quantity: totalQuantity,
-        totalPrice,
-        userId,
+        total_price: totalPrice,
+        user_id: userId,
         status: 'PENDING',
-        promoCodeId: promoCode || null,
-        discountAmount: discountAmount || 0,
+        promo_code_id: promoCode || null,
+        discount_amount: discountAmount || 0,
       },
     });
 
@@ -97,15 +97,15 @@ export const getUserBookings = async (req: AuthRequest, res: Response) => {
     }
 
     const bookings = await prisma.booking.findMany({
-      where: { userId },
+      where: { user_id: userId },
       include: {
-        promoCode: {
+        promo_codes: {
           select: {
             id: true,
             code: true,
             description: true,
-            discountType: true,
-            discountValue: true,
+            discount_type: true,
+            discount_value: true,
           },
         },
       },
@@ -189,16 +189,16 @@ export const getBookingById = async (req: AuthRequest, res: Response) => {
     const booking = await prisma.booking.findUnique({
       where: { id },
       include: {
-        user: {
+        users: {
           select: { id: true, name: true, email: true },
         },
-        promoCode: {
+        promo_codes: {
           select: {
             id: true,
             code: true,
             description: true,
-            discountType: true,
-            discountValue: true,
+            discount_type: true,
+            discount_value: true,
           },
         },
       },
@@ -209,7 +209,7 @@ export const getBookingById = async (req: AuthRequest, res: Response) => {
     }
 
     // Check if user owns the booking or is admin
-    if (booking.userId !== userId && userRole !== 'ADMIN' && userRole !== 'STAFF') {
+    if (booking.user_id !== userId && userRole !== 'ADMIN' && userRole !== 'STAFF') {
       return res.status(403).json({ error: 'Not authorized to view this booking' });
     }
 
@@ -229,13 +229,13 @@ export const updateBookingStatus = async (req: AuthRequest, res: Response) => {
       where: { id },
       data: {
         status,
-        paymentId,
-        paymentStatus,
+        payment_id: paymentId,
+        payment_status: paymentStatus,
       },
     });
 
     // Invalidate booking caches
-    invalidateCache.bookingsByUser(booking.userId);
+    invalidateCache.bookingsByUser(booking.user_id);
     invalidateCache.bookings();
 
     res.json(booking);
@@ -258,7 +258,7 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
     }
 
     // Check if user owns the booking or is admin
-    if (booking.userId !== userId && userRole !== 'ADMIN') {
+    if (booking.user_id !== userId && userRole !== 'ADMIN') {
       return res.status(403).json({ error: 'Not authorized to cancel this booking' });
     }
 
@@ -268,7 +268,7 @@ export const cancelBooking = async (req: AuthRequest, res: Response) => {
     });
 
     // Invalidate booking caches
-    invalidateCache.bookingsByUser(booking.userId);
+    invalidateCache.bookingsByUser(booking.user_id);
     invalidateCache.bookings();
 
     res.json(updatedBooking);
