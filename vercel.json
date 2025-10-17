@@ -13,23 +13,20 @@
       }
     }
   ],
-  "rewrites": [
+  "routes": [
     {
-      "source": "/api/(.*)",
-      "destination": "backend/api/index.ts"
+      "src": "/api/(.*)",
+      "dest": "backend/api/index.ts"
     },
     {
-      "source": "/(.*)",
-      "destination": "frontend/build/index.html"
+      "src": "/(.*)",
+      "dest": "frontend/build/index.html"
     }
   ],
   "functions": {
     "backend/api/index.ts": {
       "maxDuration": 30
     }
-  },
-  "env": {
-    "NODE_ENV": "production"
   }
 }
 
