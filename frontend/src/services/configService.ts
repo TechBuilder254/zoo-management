@@ -17,10 +17,14 @@ class ConfigService {
     if (this.isLoaded) return;
 
     try {
-      // Try to fetch from backend first
-      const backendUrl = window.location.hostname === 'localhost' 
-        ? 'http://localhost:5000/api/config/env'
-        : '/api/config/env';
+        // Try to fetch from backend first (only in development)
+        const backendUrl = window.location.hostname === 'localhost' 
+          ? 'http://localhost:5000/api/config/env'
+          : null; // No backend in production for now
+        
+        if (!backendUrl) {
+          throw new Error('No backend URL configured for production');
+        }
         
       const response = await fetch(backendUrl, {
         method: 'GET',
