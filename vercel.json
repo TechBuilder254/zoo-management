@@ -13,12 +13,6 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ],
-  "env": {
-    "REACT_APP_API_URL": "@react_app_api_url",
-    "REACT_APP_SUPABASE_URL": "@react_app_supabase_url",
-    "REACT_APP_SUPABASE_ANON_KEY": "@react_app_supabase_anon_key",
-    "REACT_APP_EMAIL_REDIRECT_URL": "@react_app_email_redirect_url"
-  }
+  ]
 }
 
