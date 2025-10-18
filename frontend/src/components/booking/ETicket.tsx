@@ -102,7 +102,7 @@ export const ETicket: React.FC<ETicketProps> = ({ booking }) => {
       {/* Footer */}
       <div className="text-center text-sm text-gray-600 border-t pt-4">
         <p>Wildlife Zoo | 123 Zoo Street, Wildlife City, WC 12345</p>
-        <p>Phone: +1 (555) 123-4567 | Email: info@wildlifezoo.com</p>
+        <p>Phone: +254 720 123 456 | Email: contact@example.com</p>
       </div>
     </div>
   );

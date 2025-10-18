@@ -287,7 +287,7 @@ export const MyBookings: React.FC = () => {
     
     doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
-    doc.text('www.wildlifezoo.com | support@wildlifezoo.com | +254 700 000 000', pageWidth / 2, footerY + 15, { align: 'center' });
+    doc.text('www.example.com | support@example.com | +254 720 123 456', pageWidth / 2, footerY + 15, { align: 'center' });
     
     // Generate PDF blob and open in new tab
     console.log('Generating PDF blob...');
@@ -319,13 +319,13 @@ export const MyBookings: React.FC = () => {
 VERSION:2.0
 PRODID:-//Wildlife Zoo//Booking//EN
 BEGIN:VEVENT
-UID:${booking.bookingReference}@wildlifezoo.com
+UID:${booking.bookingReference}@example.com
 DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z
 DTSTART:${startDate}
 DTEND:${endDate}
 SUMMARY:Zoo Visit - ${booking.bookingReference}
 DESCRIPTION:Wildlife Zoo Visit\\nTickets: ${totalTickets}\\nAmount: ${formatCurrency(booking.totalPrice || booking.totalAmount || 0)}
-LOCATION:Wildlife Zoo, Langata Road, Karen, Nairobi
+LOCATION:Wildlife Zoo, City Center
 STATUS:CONFIRMED
 END:VEVENT
 END:VCALENDAR`;

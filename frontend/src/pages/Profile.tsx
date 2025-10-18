@@ -2,8 +2,8 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { User as UserIcon, Mail, Phone, Bell } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
-import { authService } from '../services/authService';
-import { UpdateProfileData } from '../types';
+import { supabase } from '../config/supabase';
+import { UpdateProfileData, User } from '../types';
 import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
 import { Button } from '../components/common/Button';
@@ -25,7 +25,43 @@ export const Profile: React.FC = () => {
   const onSubmit = async (data: UpdateProfileData) => {
     setIsUpdating(true);
     try {
-      const updatedUser = await authService.updateProfile(data);
+      // Update user metadata in Supabase
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          name: `${data.firstName} ${data.lastName}`.trim(),
+          phone: data.phone || '',
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Update user in our users table
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({
+          name: `${data.firstName} ${data.lastName}`.trim(),
+          phone: data.phone || '',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', user?.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
+      // Update local user state
+      const updatedUser: User = {
+        id: user?.id || '',
+        email: user?.email || '',
+        name: `${data.firstName} ${data.lastName}`.trim(),
+        role: user?.role || 'VISITOR',
+        phone: data.phone || '',
+        email_verified: user?.email_verified || false,
+        created_at: user?.created_at || new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
       updateUser(updatedUser);
       toast.success('Profile updated successfully!');
     } catch (error) {

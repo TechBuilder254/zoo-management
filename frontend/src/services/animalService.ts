@@ -1,6 +1,5 @@
-import api from './api';
+import { supabase } from '../config/supabase';
 import { Animal, AnimalFormData, AnimalType, ConservationStatus } from '../types';
-import { PaginatedResponse } from '../types/pagination';
 
 export interface AnimalFilters {
   search?: string;
@@ -22,99 +21,268 @@ export interface AnimalsResponse {
 
 export const animalService = {
   getAll: async (filters?: AnimalFilters): Promise<AnimalsResponse> => {
-    const params = new URLSearchParams();
-    if (filters?.search) params.append('search', filters.search);
-    if (filters?.type) params.append('category', filters.type);
-    if (filters?.page) params.append('page', filters.page.toString());
-    if (filters?.limit) params.append('limit', filters.limit.toString());
+    try {
+      let query = supabase
+        .from('animals')
+        .select('*', { count: 'exact' });
 
-    const response = await api.get<any>(`/animals?${params.toString()}`);
-    console.log('Animals API Response:', response.data);
-    
-    let responseData: PaginatedResponse<Animal>;
-    
-    // Handle Redis-wrapped response format
-    if (response.data && typeof response.data === 'object' && 'value' in response.data) {
-      try {
-        const parsedData = JSON.parse(response.data.value);
-        responseData = parsedData;
-        console.log('Parsed animals data from Redis wrapper:', responseData);
-      } catch (error) {
-        console.error('Error parsing animals data:', error);
-        return {
-          animals: [],
-          total: 0,
-          page: 1,
-          totalPages: 0,
-          hasNext: false,
-          hasPrev: false,
-        };
+      // Apply filters
+      if (filters?.search) {
+        query = query.or(`name.ilike.%${filters.search}%,species.ilike.%${filters.search}%,description.ilike.%${filters.search}%`);
       }
-    } else {
-      responseData = response.data;
-      console.log('Direct animals data:', responseData);
+      
+      if (filters?.type) {
+        query = query.eq('category', filters.type);
+      }
+
+      if (filters?.conservationStatus) {
+        query = query.eq('conservation_status', filters.conservationStatus);
+      }
+
+      // Apply sorting
+      if (filters?.sortBy) {
+        switch (filters.sortBy) {
+          case 'name':
+            query = query.order('name', { ascending: true });
+            break;
+          case 'age':
+            query = query.order('age', { ascending: false });
+            break;
+          case 'popularity':
+            query = query.order('view_count', { ascending: false });
+            break;
+        }
+      } else {
+        query = query.order('created_at', { ascending: false });
+      }
+
+      // Apply pagination
+      const page = filters?.page || 1;
+      const limit = filters?.limit || 12;
+      const from = (page - 1) * limit;
+      const to = from + limit - 1;
+
+      query = query.range(from, to);
+
+      const { data, error, count } = await query;
+
+      if (error) {
+        console.error('Error fetching animals:', error);
+        throw error;
+      }
+
+      const totalPages = Math.ceil((count || 0) / limit);
+
+      return {
+        animals: data || [],
+        total: count || 0,
+        page,
+        totalPages,
+        hasNext: page < totalPages,
+        hasPrev: page > 1,
+      };
+    } catch (error) {
+      console.error('Error in animalService.getAll:', error);
+      return {
+        animals: [],
+        total: 0,
+        page: 1,
+        totalPages: 0,
+        hasNext: false,
+        hasPrev: false,
+      };
     }
-    
-    // Backend now returns paginated response
-    return {
-      animals: responseData.data,
-      total: responseData.pagination.totalItems,
-      page: responseData.pagination.currentPage,
-      totalPages: responseData.pagination.totalPages,
-      hasNext: responseData.pagination.hasNext,
-      hasPrev: responseData.pagination.hasPrev,
-    };
   },
 
   getById: async (id: string): Promise<Animal> => {
-    const response = await api.get<any>(`/animals/${id}`);
-    
-    // Handle Redis-wrapped response format
-    if (response.data && typeof response.data === 'object' && 'value' in response.data) {
-      try {
-        const parsedData = JSON.parse(response.data.value);
-        return parsedData;
-      } catch (error) {
-        console.error('Error parsing animal data:', error);
-        throw new Error('Failed to parse animal data');
+    try {
+      const { data, error } = await supabase
+        .from('animals')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching animal:', error);
+        throw error;
       }
+
+      return data;
+    } catch (error) {
+      console.error('Error in animalService.getById:', error);
+      throw error;
     }
-    
-    return response.data;
   },
 
   create: async (data: AnimalFormData, _photos?: File[]): Promise<Animal> => {
-    // For now, send as JSON instead of FormData since we're not handling file uploads yet
-    // The _photos parameter is prefixed with _ to indicate it's intentionally unused
-    const response = await api.post<Animal>('/animals', data);
-    return response.data;
+    try {
+      const { data: result, error } = await supabase
+        .from('animals')
+        .insert([{
+          name: data.name,
+          species: data.species,
+          category: data.type,
+          description: data.description,
+          diet: data.diet,
+          age: data.age,
+          sex: data.sex,
+          weight: data.weight,
+          conservation_status: data.conservationStatus,
+          interesting_facts: data.interestingFacts,
+          habitat: data.habitat,
+          status: 'ACTIVE'
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating animal:', error);
+        throw error;
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Error in animalService.create:', error);
+      throw error;
+    }
   },
 
   update: async (id: string, data: Partial<AnimalFormData>): Promise<Animal> => {
-    const response = await api.put<Animal>(`/animals/${id}`, data);
-    return response.data;
+    try {
+      const updateData: any = {};
+      
+      if (data.name) updateData.name = data.name;
+      if (data.species) updateData.species = data.species;
+      if (data.type) updateData.category = data.type;
+      if (data.description) updateData.description = data.description;
+      if (data.diet) updateData.diet = data.diet;
+      if (data.age) updateData.age = data.age;
+      if (data.sex) updateData.sex = data.sex;
+      if (data.weight) updateData.weight = data.weight;
+      if (data.conservationStatus) updateData.conservation_status = data.conservationStatus;
+      if (data.interestingFacts) updateData.interesting_facts = data.interestingFacts;
+      if (data.habitat) updateData.habitat = data.habitat;
+
+      const { data: result, error } = await supabase
+        .from('animals')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating animal:', error);
+        throw error;
+      }
+
+      return result;
+    } catch (error) {
+      console.error('Error in animalService.update:', error);
+      throw error;
+    }
   },
 
   delete: async (id: string): Promise<void> => {
-    await api.delete(`/animals/${id}`);
+    try {
+      const { error } = await supabase
+        .from('animals')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting animal:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error in animalService.delete:', error);
+      throw error;
+    }
   },
 
   search: async (query: string): Promise<Animal[]> => {
-    const response = await api.get<PaginatedResponse<Animal>>(`/animals?search=${query}`);
-    return response.data.data;
+    try {
+      const { data, error } = await supabase
+        .from('animals')
+        .select('*')
+        .or(`name.ilike.%${query}%,species.ilike.%${query}%,description.ilike.%${query}%`);
+
+      if (error) {
+        console.error('Error searching animals:', error);
+        throw error;
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error in animalService.search:', error);
+      return [];
+    }
   },
 
   addToFavorites: async (animalId: string): Promise<void> => {
-    await api.post(`/animals/${animalId}/favorite`);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { error } = await supabase
+        .from('favorites')
+        .insert([{
+          user_id: user.id,
+          animal_id: animalId
+        }]);
+
+      if (error) {
+        console.error('Error adding to favorites:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error in animalService.addToFavorites:', error);
+      throw error;
+    }
   },
 
   removeFromFavorites: async (animalId: string): Promise<void> => {
-    await api.post(`/animals/${animalId}/favorite`);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { error } = await supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('animal_id', animalId);
+
+      if (error) {
+        console.error('Error removing from favorites:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error in animalService.removeFromFavorites:', error);
+      throw error;
+    }
   },
 
   getFavorites: async (): Promise<Animal[]> => {
-    const response = await api.get<Animal[]>('/animals/user/favorites');
-    return response.data;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('User not authenticated');
+
+      const { data, error } = await supabase
+        .from('favorites')
+        .select(`
+          animals (*)
+        `)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error fetching favorites:', error);
+        throw error;
+      }
+
+      return data?.map((item: any) => item.animals) || [];
+    } catch (error) {
+      console.error('Error in animalService.getFavorites:', error);
+      return [];
+    }
   },
 };
 

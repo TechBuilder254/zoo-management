@@ -53,13 +53,26 @@ export const AnimalDetail: React.FC = () => {
   const handleReviewSubmit = async (data: any) => {
     try {
       console.log('Submitting review with data:', data);
-      const result = await reviewService.create(data);
+      console.log('Animal ID:', animal?.id || animal?._id || id);
+      console.log('Is authenticated:', isAuthenticated);
+      
+      // Ensure animalId is set
+      const reviewData = {
+        ...data,
+        animalId: data.animalId || animal?.id || animal?._id || id
+      };
+      
+      console.log('Review data with animalId:', reviewData);
+      
+      const result = await reviewService.create(reviewData);
       console.log('Review submission result:', result);
       toast.success('Review submitted successfully!');
       await loadReviews();
     } catch (error) {
       console.error('Review submission error:', error);
-      toast.error('Failed to submit review');
+      console.error('Error details:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`Failed to submit review: ${errorMessage}`);
       throw error;
     }
   };

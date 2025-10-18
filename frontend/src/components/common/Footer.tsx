@@ -124,7 +124,7 @@ export const Footer: React.FC = () => {
               </li>
               <li className="flex items-center space-x-3">
                 <Mail size={18} className="flex-shrink-0" />
-                <span className="text-sm">info@wildlifezoo.co.ke</span>
+                <span className="text-sm">contact@example.com</span>
               </li>
             </ul>
           </div>

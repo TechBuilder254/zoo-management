@@ -1,4 +1,4 @@
-import api from './api';
+import { supabase } from '../config/supabase';
 import { Event } from '../types/event';
 
 // Backend Event interface (from Supabase database)
@@ -64,28 +64,25 @@ export const eventService = {
   // Get all events
   getAll: async (status?: string): Promise<Event[]> => {
     try {
-      const params = status ? { status } : {};
-      const response = await api.get('/events', { params });
-      
-      let backendEvents: BackendEvent[] = [];
-      
-      // Handle Redis-wrapped response format
-      if (response.data && response.data.value) {
-        try {
-          const parsedData = JSON.parse(response.data.value);
-          backendEvents = Array.isArray(parsedData) ? parsedData : parsedData.data || [];
-        } catch (error) {
-          console.error('Error parsing events data:', error);
-          return [];
-        }
-      } else if (Array.isArray(response.data)) {
-        backendEvents = response.data;
-      } else if (response.data && response.data.data) {
-        backendEvents = response.data.data;
+      let query = supabase
+        .from('events')
+        .select('*');
+
+      if (status) {
+        query = query.eq('status', status);
       }
-      
-      console.log(`Fetched ${backendEvents.length} events from backend`);
-      return backendEvents.map(mapBackendEventToFrontend);
+
+      query = query.order('start_date', { ascending: true });
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching events:', error);
+        throw error;
+      }
+
+      console.log(`Fetched ${data?.length || 0} events from Supabase`);
+      return (data || []).map(mapBackendEventToFrontend);
     } catch (error) {
       console.error('Events fetch error:', error);
       return [];
@@ -95,38 +92,22 @@ export const eventService = {
   // Get upcoming events
   getUpcoming: async (): Promise<Event[]> => {
     try {
-      const response = await api.get('/events');
+      const now = new Date().toISOString();
       
-      let backendEvents: BackendEvent[] = [];
-      
-      // Handle Redis-wrapped response format
-      if (response.data && response.data.value) {
-        try {
-          const parsedData = JSON.parse(response.data.value);
-          backendEvents = Array.isArray(parsedData) ? parsedData : parsedData.data || [];
-        } catch (error) {
-          console.error('Error parsing upcoming events data:', error);
-          return [];
-        }
-      } else if (Array.isArray(response.data)) {
-        backendEvents = response.data;
-      } else if (response.data && response.data.data) {
-        backendEvents = response.data.data;
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .gte('start_date', now)
+        .neq('status', 'CANCELLED')
+        .order('start_date', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching upcoming events:', error);
+        throw error;
       }
-      
-      console.log(`Total events from backend: ${backendEvents.length}`);
-      
-      const now = new Date();
-      const upcomingBackendEvents = backendEvents.filter((event: BackendEvent) => {
-        const startDate = new Date(event.start_date);
-        const isUpcoming = startDate >= now;
-        const isNotCancelled = event.status !== 'CANCELLED';
-        console.log(`Event "${event.title}": start=${startDate.toISOString()}, status=${event.status}, upcoming=${isUpcoming}, notCancelled=${isNotCancelled}`);
-        return isUpcoming && isNotCancelled;
-      });
-      
-      console.log(`Filtered to ${upcomingBackendEvents.length} upcoming events`);
-      return upcomingBackendEvents.map(mapBackendEventToFrontend);
+
+      console.log(`Fetched ${data?.length || 0} upcoming events from Supabase`);
+      return (data || []).map(mapBackendEventToFrontend);
     } catch (error) {
       console.error('Upcoming events fetch error:', error);
       return [];
@@ -135,25 +116,108 @@ export const eventService = {
 
   // Get event by ID
   getById: async (id: string): Promise<Event> => {
-    const response = await api.get(`/events/${id}`);
-    return mapBackendEventToFrontend(response.data);
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching event:', error);
+        throw error;
+      }
+
+      return mapBackendEventToFrontend(data);
+    } catch (error) {
+      console.error('Error in eventService.getById:', error);
+      throw error;
+    }
   },
 
   // Create new event
   create: async (data: CreateEventData): Promise<Event> => {
-    const response = await api.post('/events', data);
-    return mapBackendEventToFrontend(response.data);
+    try {
+      const { data: result, error } = await supabase
+        .from('events')
+        .insert([{
+          title: data.title,
+          description: data.description,
+          type: data.type,
+          start_date: data.startDate,
+          end_date: data.endDate,
+          location: data.location,
+          capacity: data.capacity,
+          price: data.price,
+          image_url: data.imageUrl,
+          status: 'UPCOMING'
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error creating event:', error);
+        throw error;
+      }
+
+      return mapBackendEventToFrontend(result);
+    } catch (error) {
+      console.error('Error in eventService.create:', error);
+      throw error;
+    }
   },
 
   // Update event
   update: async (id: string, data: UpdateEventData): Promise<Event> => {
-    const response = await api.put(`/events/${id}`, data);
-    return mapBackendEventToFrontend(response.data);
+    try {
+      const updateData: any = {};
+      
+      if (data.title) updateData.title = data.title;
+      if (data.description) updateData.description = data.description;
+      if (data.type) updateData.type = data.type;
+      if (data.startDate) updateData.start_date = data.startDate;
+      if (data.endDate) updateData.end_date = data.endDate;
+      if (data.location) updateData.location = data.location;
+      if (data.capacity) updateData.capacity = data.capacity;
+      if (data.price) updateData.price = data.price;
+      if (data.status) updateData.status = data.status;
+      if (data.imageUrl) updateData.image_url = data.imageUrl;
+
+      const { data: result, error } = await supabase
+        .from('events')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating event:', error);
+        throw error;
+      }
+
+      return mapBackendEventToFrontend(result);
+    } catch (error) {
+      console.error('Error in eventService.update:', error);
+      throw error;
+    }
   },
 
   // Delete event
   delete: async (id: string): Promise<void> => {
-    await api.delete(`/events/${id}`);
+    try {
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        console.error('Error deleting event:', error);
+        throw error;
+      }
+    } catch (error) {
+      console.error('Error in eventService.delete:', error);
+      throw error;
+    }
   },
 };
 

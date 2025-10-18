@@ -26,8 +26,8 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       <Sidebar isMobileOpen={isMobileMenuOpen} onMobileClose={handleMobileClose} />
       
       {/* Main Content */}
-      <div className="lg:ml-56 pt-16">
-        <div className="p-3 lg:p-6 min-h-screen">
+      <div className="lg:ml-56">
+        <div className="p-4 lg:p-6 min-h-screen">
           {children}
         </div>
       </div>

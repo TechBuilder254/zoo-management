@@ -7,6 +7,7 @@ import { Modal } from '../../components/common/Modal';
 import { AdminLayout } from '../../components/admin/AdminLayout';
 import { StaffForm } from '../../components/admin/StaffForm';
 import { staffService, StaffMember } from '../../services/staffService';
+import { supabase } from '../../config/supabase';
 import toast from 'react-hot-toast';
 
 export const StaffManagement: React.FC = () => {
@@ -21,29 +22,84 @@ export const StaffManagement: React.FC = () => {
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Fetch staff members from API
+  // Test database connection and fetch staff members
   useEffect(() => {
-    const fetchStaff = async () => {
+    const testConnectionAndFetch = async () => {
+      
       try {
-        const data = await staffService.getAll();
-        setStaffMembers(data);
+        // Test 0: Check authentication status
+        await supabase.auth.getUser();
+        
+        // Test 1: Direct Supabase query to users table
+        const { data, error } = await supabase
+          .from('users')
+          .select('*', { count: 'exact' })
+          .order('created_at', { ascending: false });
+
+        // Test 1.1: Try different table names if users fails
+        if (!data || data.length === 0) {
+          // Try 'staff' table
+          await supabase
+            .from('staff')
+            .select('*', { count: 'exact' });
+          
+          // Try 'employees' table
+          await supabase
+            .from('employees')
+            .select('*', { count: 'exact' });
+        }
+
+        if (error) {
+          console.error('❌ Direct query error:', error);
+          toast.error(`Database Error: ${error.message}`);
+          return;
+        }
+
+        
+        if (data && data.length > 0) {
+          
+          // Map the data to staff members
+          const mappedStaff = data.map((user: any) => ({
+            id: user.id,
+            name: user.name || 'Unknown User',
+            email: user.email || '',
+            password: user.password,
+            role: user.role || 'VISITOR',
+            created_at: user.created_at,
+            updated_at: user.updated_at,
+          }));
+          
+          setStaffMembers(mappedStaff);
+        }
+
+        // Test 2: Try staffService method
+        try {
+          await staffService.getAll();
+        } catch (serviceError) {
+          console.error('❌ staffService.getAll() failed:', serviceError);
+          toast.error('❌ StaffService failed - check the service implementation');
+        }
+
       } catch (error) {
-        console.error('Failed to fetch staff:', error);
-        toast.error('Failed to fetch staff members');
+        console.error('❌ Connection test failed:', error);
+        const errorMsg = error instanceof Error ? error.message : 'Unknown error';
+        toast.error(`Database connection failed: ${errorMsg}`);
       } finally {
         setLoading(false);
       }
     };
-
-    fetchStaff();
+    
+    testConnectionAndFetch();
   }, []);
 
   const handleDeleteStaff = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this staff member?')) {
       try {
         await staffService.delete(id);
-        setStaffMembers(staffMembers.filter(staff => staff.id !== id));
         toast.success('Staff member deleted successfully');
+        // Refresh staff list
+        const response = await staffService.getAll();
+        setStaffMembers(response.staff);
       } catch (error) {
         console.error('Failed to delete staff:', error);
         toast.error('Failed to delete staff member');
@@ -82,33 +138,35 @@ export const StaffManagement: React.FC = () => {
         await staffService.create(data);
         toast.success('Staff member created successfully');
         // Refresh staff list
-        const updatedStaff = await staffService.getAll();
-        setStaffMembers(updatedStaff);
+        const response = await staffService.getAll();
+        setStaffMembers(response.staff);
       } else if (modalType === 'edit' && selectedStaff) {
         await staffService.update(selectedStaff.id, data);
         toast.success('Staff member updated successfully');
         // Refresh staff list
-        const updatedStaff = await staffService.getAll();
-        setStaffMembers(updatedStaff);
+        const response = await staffService.getAll();
+        setStaffMembers(response.staff);
       }
       handleCloseModal();
     } catch (error) {
-      console.error('Failed to save staff member:', error);
-      toast.error('Failed to save staff member');
+      console.error('❌ Failed to save staff member:', error);
+      console.error('❌ Error details:', JSON.stringify(error, null, 2));
+      toast.error(`Failed to save staff member: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const roles = ['All', 'ADMIN', 'STAFF', 'VISITOR'];
+  const roles = ['All', 'ADMIN', 'STAFF', 'VISITOR']; // Matches database Role enum
 
-  const filteredStaff = staffMembers.filter(staff => {
-    const matchesSearch = staff.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         staff.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = selectedRole === '' || selectedRole === 'All' || staff.role === selectedRole;
-    
-    return matchesSearch && matchesRole;
-  });
+    const filteredStaff = staffMembers.filter(staff => {
+      const matchesSearch = staff.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           staff.email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesRole = selectedRole === '' || selectedRole === 'All' || staff.role === selectedRole;
+      
+      return matchesSearch && matchesRole;
+    });
+
 
   const getRoleColor = (role: string) => {
     switch (role) {
@@ -158,6 +216,7 @@ export const StaffManagement: React.FC = () => {
               Add Staff Member
             </Button>
           </div>
+
 
           {/* Filters */}
           <Card padding="lg" className="mb-6">
@@ -219,6 +278,7 @@ export const StaffManagement: React.FC = () => {
                     <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Email</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Role</th>
                     <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Joined</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Last Updated</th>
                     <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white">Actions</th>
                   </tr>
                 </thead>
@@ -238,6 +298,9 @@ export const StaffManagement: React.FC = () => {
                               <p className="text-sm text-gray-600 dark:text-gray-400">
                                 ID: {staff.id.slice(-8)}
                               </p>
+                              <p className="text-xs text-gray-500 dark:text-gray-500">
+                                Updated: {new Date(staff.updated_at).toLocaleDateString()}
+                              </p>
                             </div>
                           </div>
                         </td>
@@ -251,7 +314,12 @@ export const StaffManagement: React.FC = () => {
                         </td>
                         <td className="py-4 px-4">
                           <p className="text-gray-900 dark:text-white">
-                            {new Date(staff.createdAt).toLocaleDateString()}
+                            {new Date(staff.created_at).toLocaleDateString()}
+                          </p>
+                        </td>
+                        <td className="py-4 px-4">
+                          <p className="text-gray-900 dark:text-white">
+                            {new Date(staff.updated_at).toLocaleDateString()}
                           </p>
                         </td>
                         <td className="py-4 px-4">
@@ -286,8 +354,10 @@ export const StaffManagement: React.FC = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="py-8 text-center text-gray-500 dark:text-gray-400">
-                        {searchTerm || selectedRole !== '' ? 'No staff members found matching your criteria.' : 'No staff members found.'}
+                      <td colSpan={6} className="py-8 text-center text-gray-500 dark:text-gray-400">
+                        {searchTerm || selectedRole !== '' ? 'No staff members found matching your criteria.' : 
+                         staffMembers.length === 0 ? 'No staff members found. You may need admin privileges to view staff data.' : 
+                         'No staff members found.'}
                       </td>
                     </tr>
                   )}
@@ -309,13 +379,18 @@ export const StaffManagement: React.FC = () => {
           >
             {modalType === 'view' && selectedStaff ? (
               <div className="space-y-4">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {selectedStaff.name}
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mt-1">
-                    {selectedStaff.email}
-                  </p>
+                <div className="flex items-center space-x-4">
+                  <div className="w-16 h-16 rounded-full bg-primary-light dark:bg-primary/20 flex items-center justify-center">
+                    <UserCheck size={32} className="text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      {selectedStaff.name}
+                    </h3>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      {selectedStaff.email}
+                    </p>
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4">
@@ -326,18 +401,26 @@ export const StaffManagement: React.FC = () => {
                     </span>
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900 dark:text-white mb-1">Joined</h4>
-                    <p className="text-gray-600 dark:text-gray-400">
-                      {new Date(selectedStaff.createdAt).toLocaleDateString()}
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-1">User ID</h4>
+                    <p className="text-gray-600 dark:text-gray-400 font-mono text-xs">
+                      {selectedStaff.id}
                     </p>
                   </div>
                 </div>
 
-                <div>
-                  <h4 className="font-medium text-gray-900 dark:text-white mb-1">Last Updated</h4>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    {new Date(selectedStaff.updatedAt).toLocaleDateString()}
-                  </p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-1">Joined</h4>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      {new Date(selectedStaff.created_at).toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-1">Last Updated</h4>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      {new Date(selectedStaff.updated_at).toLocaleString()}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="flex justify-end pt-4">

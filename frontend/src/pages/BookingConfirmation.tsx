@@ -306,7 +306,7 @@ export const BookingConfirmation: React.FC = () => {
     doc.setFontSize(8);
     doc.setFont('helvetica', 'normal');
     doc.text('Thank you for choosing Wildlife Zoo!', pageWidth / 2, footerY, { align: 'center' });
-    doc.text('www.wildlifezoo.com | support@wildlifezoo.com', pageWidth / 2, footerY + 8, { align: 'center' });
+    doc.text('www.example.com | support@example.com', pageWidth / 2, footerY + 8, { align: 'center' });
     
     // Save the PDF
     const fileName = `e-ticket-${booking.bookingReference || booking.id}.pdf`;

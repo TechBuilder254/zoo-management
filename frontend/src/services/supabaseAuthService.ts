@@ -168,7 +168,7 @@ export const supabaseAuthService = {
 
   // Listen to auth state changes
   onAuthStateChange: (callback: (user: User | null) => void) => {
-    return supabase.auth.onAuthStateChange((_event, session) => {
+    return supabase.auth.onAuthStateChange((_event: any, session: any) => {
       if (session?.user) {
         const user: User = {
           id: session.user.id,

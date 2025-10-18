@@ -1,9 +1,9 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
-import { API_URL } from '../utils/constants';
 import { supabase } from '../config/supabase';
 
+// Note: This API service is now primarily used for external API calls
+// Internal database operations should use Supabase directly
 const api: AxiosInstance = axios.create({
-  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },

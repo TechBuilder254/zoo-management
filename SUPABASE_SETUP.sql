@@ -342,11 +342,12 @@ INSERT INTO ticket_prices (ticket_type, price, description, is_active) VALUES
 ('senior', 1000.00, 'Senior ticket (60+ years)', true)
 ON CONFLICT (ticket_type) DO NOTHING;
 
--- Insert sample admin user (password: admin123 - hashed)
--- NOTE: This is a placeholder. You'll need to hash the password properly in your app
-INSERT INTO users (email, password, name, role) VALUES
-('admin@zoo.com', '$2b$10$rZlmNT8.9EfmVL5CjPZ3XeH9wHEKMYx9qZNKWzR9rC7YvvKPVxFei', 'Zoo Admin', 'ADMIN')
-ON CONFLICT (email) DO NOTHING;
+-- Insert sample admin user
+-- TODO: Replace with your admin credentials and properly hash the password
+-- NOTE: You'll need to hash the password properly in your app
+-- Example: INSERT INTO users (email, password, name, role) VALUES
+-- ('YOUR_ADMIN_EMAIL@example.com', 'YOUR_HASHED_PASSWORD', 'Your Name', 'ADMIN')
+-- ON CONFLICT (email) DO NOTHING;
 
 -- =====================================================
 -- SUCCESS MESSAGE

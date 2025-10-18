@@ -10,7 +10,6 @@ import { Navbar } from './components/common/Navbar';
 import { Footer } from './components/common/Footer';
 import { Loader } from './components/common/Loader';
 import { ScrollToTop } from './components/common/ScrollToTop';
-import ConnectionStatus from './components/common/ConnectionStatus';
 
 // Pages
 import { Home } from './pages/Home';
@@ -35,6 +34,7 @@ import { AnimalManagement } from './pages/admin/AnimalManagement';
 import { BookingManagement } from './pages/admin/BookingManagement';
 import { ReviewModeration } from './pages/admin/ReviewModeration';
 import { StaffManagement } from './pages/admin/StaffManagement';
+import { DebugPage } from './pages/admin/DebugPage';
 import { AnimalHealth } from './pages/admin/AnimalHealth';
 import { EventsManagement } from './pages/admin/EventsManagement';
 import { FinancialManagement } from './pages/admin/FinancialManagement';
@@ -191,6 +191,18 @@ const AppRoutes: React.FC = () => {
             }
           />
           <Route
+            path="/admin/debug"
+            element={
+              <AdminRoute>
+                <DebugPage />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/staff-debug"
+            element={<StaffManagement />}
+          />
+          <Route
             path="/admin/health"
             element={
               <AdminRoute>
@@ -254,7 +266,6 @@ const App: React.FC = () => {
           <AuthProvider>
             <BookingProvider>
               <AppRoutes />
-              <ConnectionStatus />
               <Toaster
                 position="top-right"
                 toastOptions={{

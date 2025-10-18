@@ -18,9 +18,7 @@ class ConfigService {
 
     try {
         // Try to fetch from backend first
-        const backendUrl = window.location.hostname === 'localhost' 
-          ? 'http://localhost:5000/api/config/env'
-          : '/api/config/env';
+        const backendUrl = '/api/config/env';
         
       const response = await fetch(backendUrl, {
         method: 'GET',
@@ -60,9 +58,9 @@ class ConfigService {
 
     // Fallback to process.env for development and production
     this.config = {
-      REACT_APP_API_URL: process.env.REACT_APP_API_URL || (window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api'),
-      REACT_APP_SUPABASE_URL: process.env.REACT_APP_SUPABASE_URL || 'https://yvwvajxkcxhwslegmvqq.supabase.co',
-      REACT_APP_SUPABASE_ANON_KEY: process.env.REACT_APP_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2d3ZhanhrY3hod3NsZWdtdnFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0MTQ2ODEsImV4cCI6MjA3NTk5MDY4MX0.cmaFMQjqaYI0CM9RoyOT58xeqRfgzNBUh9JWCOxerrw',
+      REACT_APP_API_URL: process.env.REACT_APP_API_URL || '/api',
+      REACT_APP_SUPABASE_URL: process.env.REACT_APP_SUPABASE_URL,
+      REACT_APP_SUPABASE_ANON_KEY: process.env.REACT_APP_SUPABASE_ANON_KEY,
       REACT_APP_EMAIL_REDIRECT_URL: process.env.REACT_APP_EMAIL_REDIRECT_URL || window.location.origin,
       REACT_APP_HUGGINGFACE_API_KEY: process.env.REACT_APP_HUGGINGFACE_API_KEY,
       REACT_APP_ENABLE_SENTIMENT_ANALYSIS: process.env.REACT_APP_ENABLE_SENTIMENT_ANALYSIS === 'true',
@@ -72,12 +70,7 @@ class ConfigService {
       REACT_APP_TOXICITY_THRESHOLD: parseFloat(process.env.REACT_APP_TOXICITY_THRESHOLD || '0.8'),
       REACT_APP_STRIPE_PUBLIC_KEY: process.env.REACT_APP_STRIPE_PUBLIC_KEY,
       REACT_APP_GOOGLE_MAPS_API_KEY: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
-      REACT_APP_ADULT_TICKET_PRICE: parseInt(process.env.REACT_APP_ADULT_TICKET_PRICE || '1500'),
-      REACT_APP_CHILD_TICKET_PRICE: parseInt(process.env.REACT_APP_CHILD_TICKET_PRICE || '750'),
-      REACT_APP_SENIOR_TICKET_PRICE: parseInt(process.env.REACT_APP_SENIOR_TICKET_PRICE || '1000'),
-      REACT_APP_CONTACT_PHONE: process.env.REACT_APP_CONTACT_PHONE || '+254720123456',
-      REACT_APP_CONTACT_PHONE_DISPLAY: process.env.REACT_APP_CONTACT_PHONE_DISPLAY || '+254 720 123 456',
-      REACT_APP_CONTACT_EMAIL: process.env.REACT_APP_CONTACT_EMAIL || 'info@wildlifezoo.co.ke',
+      // Ticket prices and contact info are managed through admin panel, not environment variables
     };
     this.isLoaded = true;
   }

@@ -8,15 +8,14 @@ const getConfigValue = (key: string, fallback: any) => {
   return configService.get(key) || process.env[key] || fallback;
 };
 
-export const API_URL = getConfigValue('REACT_APP_API_URL', 
-  window.location.hostname === 'localhost' ? 'http://localhost:5000/api' : '/api');
+// API_URL removed - now using Supabase directly
 export const GOOGLE_MAPS_API_KEY = getConfigValue('REACT_APP_GOOGLE_MAPS_API_KEY', '');
 export const STRIPE_PUBLIC_KEY = getConfigValue('REACT_APP_STRIPE_PUBLIC_KEY', '');
 
 export const TICKET_PRICES = {
-  adult: getConfigValue('REACT_APP_ADULT_TICKET_PRICE', 1500), // KSh
-  child: getConfigValue('REACT_APP_CHILD_TICKET_PRICE', 750),  // KSh
-  senior: getConfigValue('REACT_APP_SENIOR_TICKET_PRICE', 1000), // KSh
+  adult: 1500, // KSh - managed through admin panel
+  child: 750,  // KSh - managed through admin panel
+  senior: 1000, // KSh - managed through admin panel
 };
 
 export const ANIMAL_TYPES = [

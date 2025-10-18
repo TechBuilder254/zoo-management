@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogIn } from 'lucide-react';
@@ -10,7 +10,7 @@ import { Card } from '../components/common/Card';
 import { validateEmail } from '../utils/validation';
 
 export const Login: React.FC = () => {
-  const { login } = useAuth();
+  const { login, user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = React.useState(false);
 
@@ -20,21 +20,22 @@ export const Login: React.FC = () => {
     formState: { errors },
   } = useForm<LoginCredentials>();
 
+  // Redirect after successful login
+  useEffect(() => {
+    if (user && isAuthenticated) {
+      console.log('Login: Current user after login:', user);
+      if (user.role === 'ADMIN') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/');
+      }
+    }
+  }, [user, isAuthenticated, navigate]);
+
   const onSubmit = async (data: LoginCredentials) => {
     setIsLoading(true);
     try {
       await login(data);
-      // Check user role and redirect accordingly
-      // Use a small delay to ensure user state is updated
-      setTimeout(() => {
-        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-        console.log('Login: Current user after login:', currentUser);
-        if (currentUser.role === 'ADMIN') {
-          navigate('/admin/dashboard');
-        } else {
-          navigate('/');
-        }
-      }, 100);
     } catch (error: any) {
       console.error('Login error:', error);
       // If it's an email verification error, redirect to verification page

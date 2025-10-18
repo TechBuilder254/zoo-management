@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Check, X } from 'lucide-react';
+import { Search, Check, X, Calendar } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
+import { Modal } from '../../components/common/Modal';
 import { RatingStars } from '../../components/reviews/RatingStars';
 import { AdminLayout } from '../../components/admin/AdminLayout';
 import { reviewService } from '../../services/reviewService';
@@ -85,6 +86,10 @@ export const ReviewModeration: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedReview, setSelectedReview] = useState<Review | null>(null);
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -117,6 +122,39 @@ export const ReviewModeration: React.FC = () => {
       await reviewService.moderate(id, 'REJECTED');
       setReviews(reviews.map(r => r.id === id ? { ...r, status: 'REJECTED' } : r));
       toast.success('Review rejected');
+    } catch (error) {
+      toast.error('Failed to reject review');
+    }
+  };
+
+  // Modal handlers
+  const handleViewReview = (review: Review) => {
+    setSelectedReview(review);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedReview(null);
+  };
+
+  const handleApproveFromModal = async (reviewId: string) => {
+    try {
+      await reviewService.moderate(reviewId, 'APPROVED');
+      setReviews(reviews.map(r => r.id === reviewId ? { ...r, status: 'APPROVED' } : r));
+      toast.success('Review approved');
+      handleCloseModal();
+    } catch (error) {
+      toast.error('Failed to approve review');
+    }
+  };
+
+  const handleRejectFromModal = async (reviewId: string) => {
+    try {
+      await reviewService.moderate(reviewId, 'REJECTED');
+      setReviews(reviews.map(r => r.id === reviewId ? { ...r, status: 'REJECTED' } : r));
+      toast.success('Review rejected');
+      handleCloseModal();
     } catch (error) {
       toast.error('Failed to reject review');
     }
@@ -221,40 +259,23 @@ export const ReviewModeration: React.FC = () => {
             </div>
           </div>
 
-          {/* Reviews Table */}
-          <Card padding="none" className="overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-800">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Animal / User
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Rating
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Comment & AI Sentiment
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Date
-                    </th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                      Actions
-                    </th>
+          {/* Reviews List - Desktop Table / Mobile Cards */}
+          <Card padding="lg">
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200 dark:border-gray-700">
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Animal / User</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Rating</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Comment & AI Sentiment</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Status</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-900 dark:text-white">Date</th>
+                    <th className="text-center py-3 px-4 font-medium text-gray-900 dark:text-white">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                  {filteredReviews.length === 0 ? (
-                    <tr>
-                      <td colSpan={6} className="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
-                        No reviews found
-                      </td>
-                    </tr>
-                  ) : (
+                <tbody>
+                  {filteredReviews.length > 0 ? (
                     filteredReviews.map((review) => (
                       <ReviewRow 
                         key={review.id} 
@@ -263,11 +284,184 @@ export const ReviewModeration: React.FC = () => {
                         onReject={handleReject}
                       />
                     ))
+                  ) : (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-gray-500 dark:text-gray-400">
+                        No reviews found
+                      </td>
+                    </tr>
                   )}
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile Card View */}
+            <div className="lg:hidden space-y-4">
+              {filteredReviews.length > 0 ? (
+                filteredReviews.map((review) => {
+                  const sentiment = review.sentiment 
+                    ? { label: review.sentiment as 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL', score: review.sentimentScore || 0.5 }
+                    : null;
+
+                  const getStatusColor = (status: string) => {
+                    const s = status.toUpperCase();
+                    if (s === 'APPROVED') return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400';
+                    if (s === 'PENDING') return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400';
+                    if (s === 'REJECTED') return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400';
+                    return 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400';
+                  };
+
+                  return (
+                    <div 
+                      key={review.id}
+                      className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors"
+                      onClick={() => handleViewReview(review)}
+                    >
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-gray-900 dark:text-white text-base">
+                            {review.animal?.name || 'Unknown Animal'}
+                          </h3>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">
+                            by {review.user?.name || 'Anonymous'}
+                          </p>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-semibold flex-shrink-0 ${getStatusColor(review.status)}`}>
+                          {review.status}
+                        </span>
+                      </div>
+                      
+                      <div className="mb-3">
+                        <RatingStars rating={review.rating} size={16} />
+                      </div>
+                      
+                      <div className="mb-3">
+                        <p className="text-gray-700 dark:text-gray-300 text-sm line-clamp-2">
+                          {review.comment}
+                        </p>
+                        {sentiment && (
+                          <div className="mt-2">
+                            <SentimentBadge sentiment={sentiment} size="sm" />
+                          </div>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center text-gray-600 dark:text-gray-400 text-sm">
+                        <Calendar size={14} className="mr-2" />
+                        <span>{new Date(review.created_at || review.createdAt || '').toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  No reviews found
+                </div>
+              )}
+            </div>
           </Card>
+
+          {/* Modal */}
+          <Modal
+            isOpen={isModalOpen}
+            onClose={handleCloseModal}
+            title="Review Details"
+            size="md"
+          >
+            {selectedReview && (
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    Review for {selectedReview.animal?.name || 'Unknown Animal'}
+                  </h3>
+                  <p className="text-gray-600 dark:text-gray-400 mt-1">
+                    by {selectedReview.user?.name || 'Anonymous'}
+                  </p>
+                </div>
+                
+                <div>
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">Rating</h4>
+                  <RatingStars rating={selectedReview.rating} size={20} />
+                </div>
+                
+                <div>
+                  <h4 className="font-medium text-gray-900 dark:text-white mb-2">Comment</h4>
+                  <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                    <p className="text-gray-700 dark:text-gray-300">
+                      {selectedReview.comment}
+                    </p>
+                  </div>
+                </div>
+
+                {selectedReview.sentiment && (
+                  <div>
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-2">AI Sentiment Analysis</h4>
+                    <SentimentBadge 
+                      sentiment={{
+                        label: selectedReview.sentiment as 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL',
+                        score: selectedReview.sentimentScore || 0.5
+                      }} 
+                      size="md" 
+                    />
+                  </div>
+                )}
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-1">Status</h4>
+                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                      selectedReview.status.toUpperCase() === 'APPROVED' ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' :
+                      selectedReview.status.toUpperCase() === 'PENDING' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400' :
+                      selectedReview.status.toUpperCase() === 'REJECTED' ? 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-400' :
+                      'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
+                    }`}>
+                      {selectedReview.status}
+                    </span>
+                  </div>
+                  <div>
+                    <h4 className="font-medium text-gray-900 dark:text-white mb-1">Date</h4>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      {new Date(selectedReview.created_at || selectedReview.createdAt || '').toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+
+                {selectedReview.status.toUpperCase() === 'PENDING' && (
+                  <div className="flex justify-between items-center pt-4">
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => handleApproveFromModal(selectedReview.id)}
+                        className="flex items-center space-x-2 text-green-600 hover:text-green-700 hover:bg-green-50"
+                      >
+                        <Check size={16} />
+                        <span>Approve Review</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => handleRejectFromModal(selectedReview.id)}
+                        className="flex items-center space-x-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <X size={16} />
+                        <span>Reject Review</span>
+                      </Button>
+                    </div>
+                    <Button variant="outline" onClick={handleCloseModal}>
+                      Close
+                    </Button>
+                  </div>
+                )}
+
+                {selectedReview.status.toUpperCase() !== 'PENDING' && (
+                  <div className="flex justify-end pt-4">
+                    <Button variant="outline" onClick={handleCloseModal}>
+                      Close
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </Modal>
         </AdminLayout>
   );
 };

@@ -290,16 +290,16 @@ export const AnimalHealth: React.FC = () => {
                               <div className="flex-shrink-0 h-10 w-10">
                                 <img
                                   className="h-10 w-10 rounded-full object-cover"
-                                  src={record.animal.image_url || '/placeholder-animal.jpg'}
-                                  alt={record.animal.name}
+                                  src={record.animal?.image_url || '/placeholder-animal.jpg'}
+                                  alt={record.animal?.name || 'Unknown Animal'}
                                 />
                               </div>
                               <div className="ml-4">
                                 <div className="text-sm font-medium text-gray-900 dark:text-white">
-                                  {record.animal.name}
+                                  {record.animal?.name || 'Unknown Animal'}
                                 </div>
                                 <div className="text-sm text-gray-500 dark:text-gray-400">
-                                  {record.animal.species} • ID: {record.animal.id}
+                                  {record.animal?.species || 'Unknown Species'} • ID: {record.animal?.id || 'N/A'}
                                 </div>
                               </div>
                             </div>
@@ -386,15 +386,15 @@ export const AnimalHealth: React.FC = () => {
                     <div className="flex items-center mb-4">
                       <img
                         className="h-12 w-12 rounded-full object-cover mr-4"
-                        src={appointment.animal.image_url || '/placeholder-animal.jpg'}
-                        alt={appointment.animal.name}
+                        src={appointment.animal?.image_url || '/placeholder-animal.jpg'}
+                        alt={appointment.animal?.name || 'Unknown Animal'}
                       />
                       <div>
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                          {appointment.animal.name}
+                          {appointment.animal?.name || 'Unknown Animal'}
                         </h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {appointment.animal.species} • ID: {appointment.animal.id}
+                          {appointment.animal?.species || 'Unknown Species'} • ID: {appointment.animal?.id || 'N/A'}
                         </p>
                       </div>
                     </div>
@@ -450,15 +450,15 @@ export const AnimalHealth: React.FC = () => {
                       <div className="flex items-center">
                         <img
                           className="h-12 w-12 rounded-full object-cover mr-4"
-                          src={alert.animal.image_url || '/placeholder-animal.jpg'}
-                          alt={alert.animal.name}
+                          src={alert.animal?.image_url || '/placeholder-animal.jpg'}
+                          alt={alert.animal?.name || 'Unknown Animal'}
                         />
                         <div>
                           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                            {alert.animal.name}
+                            {alert.animal?.name || 'Unknown Animal'}
                           </h3>
                           <p className="text-sm text-gray-600 dark:text-gray-400">
-                            {alert.animal.species} • ID: {alert.animal.id}
+                            {alert.animal?.species || 'Unknown Species'} • ID: {alert.animal?.id || 'N/A'}
                           </p>
                           <p className="text-sm text-gray-900 dark:text-white mt-1">
                             {alert.description}

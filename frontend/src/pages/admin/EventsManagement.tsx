@@ -282,9 +282,10 @@ export const EventsManagement: React.FC = () => {
             </div>
           </Card>
 
-          {/* Events Table */}
+          {/* Events List - Desktop Table / Mobile Cards */}
           <Card padding="lg">
-            <div className="overflow-x-auto">
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200 dark:border-gray-700">
@@ -303,22 +304,22 @@ export const EventsManagement: React.FC = () => {
                       <tr key={event._id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50">
                         <td className="py-4 px-4">
                           <div className="flex items-center space-x-3">
-                            <div className="w-12 h-12 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden">
+                            <div className="w-16 h-16 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
                               {(event.image_url || event.image) ? (
                                 <img src={event.image_url || event.image} alt={event.title} className="w-full h-full object-cover" />
                               ) : (
                                 <Calendar size={24} className="text-gray-400" />
                               )}
-                  </div>
-                            <div>
-                              <p className="font-semibold text-gray-900 dark:text-white">
-                        {event.title}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-semibold text-gray-900 dark:text-white truncate">
+                                {event.title}
                               </p>
                               <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                                 {event.description}
                               </p>
-                      </div>
-                    </div>
+                            </div>
+                          </div>
                         </td>
                         <td className="py-4 px-4">
                           <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
@@ -376,7 +377,7 @@ export const EventsManagement: React.FC = () => {
                               className="p-2"
                               onClick={() => handleEditEvent(event)}
                             >
-                        <Edit size={16} />
+                              <Edit size={16} />
                             </Button>
                             <Button
                               variant="outline"
@@ -384,9 +385,9 @@ export const EventsManagement: React.FC = () => {
                               className="p-2 text-red-600 hover:text-red-700 hover:bg-red-50"
                               onClick={() => handleDeleteEvent(event._id || event.id)}
                             >
-                        <Trash2 size={16} />
+                              <Trash2 size={16} />
                             </Button>
-                    </div>
+                          </div>
                         </td>
                       </tr>
                     ))
@@ -399,7 +400,70 @@ export const EventsManagement: React.FC = () => {
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="lg:hidden space-y-4">
+              {filteredEvents.length > 0 ? (
+                filteredEvents.map((event) => (
+                  <div 
+                    key={event._id}
+                    className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer transition-colors"
+                    onClick={() => handleViewEvent(event)}
+                  >
+                    <div className="flex items-start space-x-3">
+                      <div className="w-16 h-16 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {(event.image_url || event.image) ? (
+                          <img src={event.image_url || event.image} alt={event.title} className="w-full h-full object-cover" />
+                        ) : (
+                          <Calendar size={24} className="text-gray-400" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 dark:text-white text-base truncate">
+                              {event.title}
+                            </h3>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 line-clamp-2">
+                              {event.description}
+                            </p>
+                          </div>
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ml-2 flex-shrink-0 ${getStatusColor(event.status || 'UPCOMING', event.isActive)}`}>
+                            {getStatusText(event.status || 'UPCOMING', event.isActive)}
+                          </span>
+                        </div>
+                        
+                        <div className="mt-3 flex flex-wrap gap-2 text-sm text-gray-600 dark:text-gray-400">
+                          <div className="flex items-center">
+                            <Calendar size={14} className="mr-1" />
+                            <span>{new Date(event.start_date || event.eventDate || '').toLocaleDateString()}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <MapPin size={14} className="mr-1" />
+                            <span className="truncate">{event.location}</span>
+                          </div>
+                          <div className="flex items-center">
+                            <Users size={14} className="mr-1" />
+                            <span>{event.capacity}</span>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-2">
+                          <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300">
+                            {event.category || 'Special Event'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  {searchTerm || selectedType !== '' || selectedStatus !== '' ? 'No events found matching your criteria.' : 'No events found.'}
+                </div>
+              )}
+            </div>
           </Card>
 
           {/* Modal */}
@@ -476,7 +540,31 @@ export const EventsManagement: React.FC = () => {
                           </span>
                       </div>
 
-                <div className="flex justify-end pt-4">
+                <div className="flex justify-between items-center pt-4">
+                  <div className="flex space-x-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        handleCloseModal();
+                        handleEditEvent(selectedEvent);
+                      }}
+                      className="flex items-center space-x-2"
+                    >
+                      <Edit size={16} />
+                      <span>Edit Event</span>
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        handleCloseModal();
+                        handleDeleteEvent(selectedEvent._id || selectedEvent.id);
+                      }}
+                      className="flex items-center space-x-2 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    >
+                      <Trash2 size={16} />
+                      <span>Delete Event</span>
+                    </Button>
+                  </div>
                   <Button variant="outline" onClick={handleCloseModal}>
                     Close
                   </Button>

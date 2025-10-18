@@ -19,9 +19,6 @@ export const Animals: React.FC = () => {
   const [sortBy, setSortBy] = useState<'name' | 'age' | 'popularity'>('name');
   const [page, setPage] = useState(1);
   const [viewMode, setViewMode] = useState<ViewMode>('list'); // Default to list view
-  
-  // Debug log to verify view mode
-  console.log('Current viewMode:', viewMode);
 
   const { data: animalsData, isLoading: loading } = useAnimals({
     search,

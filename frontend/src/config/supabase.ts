@@ -1,24 +1,17 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import configService from '../services/configService';
-
-// Initialize config service
-configService.loadConfig();
 
 // Get the correct redirect URL for email verification
 export const getEmailRedirectUrl = () => {
-  const redirectUrl = configService.get('REACT_APP_EMAIL_REDIRECT_URL') || window.location.origin;
+  const redirectUrl = process.env.REACT_APP_EMAIL_REDIRECT_URL || window.location.origin;
   return `${redirectUrl}/verify-email`;
 };
 
-// Get Supabase configuration with fallbacks
+// Get Supabase configuration
 const getSupabaseConfig = () => {
-  const supabaseUrl = configService.get('REACT_APP_SUPABASE_URL') || 
-    process.env.REACT_APP_SUPABASE_URL || 
-    'https://yvwvajxkcxhwslegmvqq.supabase.co';
-    
-  const supabaseAnonKey = configService.get('REACT_APP_SUPABASE_ANON_KEY') || 
-    process.env.REACT_APP_SUPABASE_ANON_KEY || 
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2d3ZhanhrY3hod3NsZWdtdnFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0MTQ2ODEsImV4cCI6MjA3NTk5MDY4MX0.cmaFMQjqaYI0CM9RoyOT58xeqRfgzNBUh9JWCOxerrw';
+  const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://yvwvajxkcxhwslegmvqq.supabase.co';
+  const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl2d3ZjanhrY3hod3NsZWdtdnFxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0MTQ2ODEsImV4cCI6MjA3NTk5MDY4MX0.cmaFMQjqaYI0CM9RoyOT58xeqRfgzNBUh9JWCOxerrw';
+
+  console.log('🔧 Supabase config:', { supabaseUrl, supabaseAnonKey: supabaseAnonKey.substring(0, 20) + '...' });
 
   return { supabaseUrl, supabaseAnonKey };
 };
@@ -41,6 +34,13 @@ export const getSupabaseClient = (): SupabaseClient => {
   return supabaseClient;
 };
 
-export const supabase = getSupabaseClient();
+// Create a proxy that calls getSupabaseClient when accessed
+export const supabase = new Proxy({} as any, {
+  get(_target, prop) {
+    const client = getSupabaseClient();
+    return client[prop as keyof typeof client];
+  }
+});
+
 export default supabase;
 

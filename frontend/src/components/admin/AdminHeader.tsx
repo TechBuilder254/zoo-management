@@ -13,15 +13,16 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuToggle }) => {
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   return (
-    <header className="bg-primary text-white shadow-lg relative z-40">
+    <header className="bg-primary text-white shadow-lg sticky top-0 z-50">
       <div className="flex items-center justify-between px-4 py-3">
         {/* Left side - Logo and Mobile Menu */}
         <div className="flex items-center space-x-4">
           {/* Mobile Menu Button */}
           <button
             onClick={onMenuToggle}
-            className="lg:hidden p-2 rounded-lg hover:bg-primary-dark transition-colors"
+            className="lg:hidden p-2 rounded-lg hover:bg-white hover:bg-opacity-20 transition-colors z-50 relative"
             aria-label="Toggle menu"
+            type="button"
           >
             <Menu size={24} />
           </button>
@@ -67,7 +68,7 @@ export const AdminHeader: React.FC<AdminHeaderProps> = ({ onMenuToggle }) => {
               <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
                 <div className="px-4 py-2 border-b border-gray-200">
                   <p className="text-sm font-medium text-gray-900">Administrator</p>
-                  <p className="text-xs text-gray-500">admin@wildlifezoo.com</p>
+                  <p className="text-xs text-gray-500">Admin User</p>
                 </div>
                 <button
                   onClick={logout}

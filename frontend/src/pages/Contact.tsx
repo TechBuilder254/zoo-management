@@ -4,7 +4,6 @@ import { Card } from '../components/common/Card';
 import { Input } from '../components/common/Input';
 import { Button } from '../components/common/Button';
 import toast from 'react-hot-toast';
-import configService from '../services/configService';
 
 export const Contact: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -60,14 +59,14 @@ export const Contact: React.FC = () => {
     {
       icon: <Phone size={24} className="text-primary" />,
       title: 'Call Us',
-      content: configService.get('REACT_APP_CONTACT_PHONE_DISPLAY') || '+254 720 123 456',
-      link: `tel:${configService.get('REACT_APP_CONTACT_PHONE') || '+254720123456'}`,
+      content: '+254 720 123 456',
+      link: 'tel:+254720123456',
     },
     {
       icon: <Mail size={24} className="text-primary" />,
       title: 'Email Us',
-      content: configService.get('REACT_APP_CONTACT_EMAIL') || 'info@wildlifezoo.co.ke',
-      link: `mailto:${configService.get('REACT_APP_CONTACT_EMAIL') || 'info@wildlifezoo.co.ke'}`,
+      content: 'contact@example.com',
+      link: 'mailto:contact@example.com',
     },
     {
       icon: <Clock size={24} className="text-primary" />,
