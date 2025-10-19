@@ -139,6 +139,9 @@ export const supabaseAuthService = {
       const { error } = await supabase.auth.resend({
         type: 'signup',
         email: email,
+        options: {
+          emailRedirectTo: getEmailRedirectUrl(),
+        },
       });
 
       if (error) {
