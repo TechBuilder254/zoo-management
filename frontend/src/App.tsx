@@ -70,8 +70,7 @@ const AdminRoute: React.FC<AdminRouteProps> = ({ children }) => {
   }
 
   // Check if user is authenticated and has admin role
-  // TEMPORARY: Allow any authenticated user to access admin (for debugging)
-  const isAdmin = isAuthenticated;
+  const isAdmin = isAuthenticated && (user?.role === 'ADMIN' || user?.role === 'admin');
   
   return isAdmin ? children : <Navigate to="/" replace />;
 };
