@@ -2,8 +2,13 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // Get the correct redirect URL for email verification
 export const getEmailRedirectUrl = () => {
-  const redirectUrl = process.env.REACT_APP_EMAIL_REDIRECT_URL || window.location.origin;
-  return `${redirectUrl}/verify-email`;
+  // Always use the current domain where the app is running
+  // This works for localhost, vercel.app, or any custom domain
+  const currentDomain = window.location.origin;
+  
+  console.log('🔗 Email redirect URL:', `${currentDomain}/verify-email`);
+  
+  return `${currentDomain}/verify-email`;
 };
 
 // Get Supabase configuration
