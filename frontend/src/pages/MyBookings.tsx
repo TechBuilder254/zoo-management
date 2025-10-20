@@ -12,6 +12,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import toast from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
+import { useNavigate } from 'react-router-dom';
 
 export const MyBookings: React.FC = () => {
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -19,6 +20,7 @@ export const MyBookings: React.FC = () => {
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
   const [isCanceling, setIsCanceling] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     loadBookings();
@@ -383,8 +385,17 @@ END:VCALENDAR`;
         </div>
 
         <div className="space-y-6">
-          {bookings.map((booking) => (
-            <Card key={booking._id} padding="lg">
+          {bookings.map((booking) => {
+            const totalTickets = booking.tickets 
+              ? (booking.tickets.adult.quantity + booking.tickets.child.quantity + booking.tickets.senior.quantity)
+              : booking.quantity;
+            const totalAmount = booking.total_price || booking.totalPrice || booking.totalAmount || 0;
+            const buyerName = booking.users?.name || booking.user?.name || 'Unknown';
+            const buyerEmail = booking.users?.email || booking.user?.email || 'No email';
+            const bookingId = booking.id || (booking as any)._id || 'new';
+            const goToReceipt = () => navigate(`/booking-confirmation/${bookingId}`, { state: { booking } as any });
+            return (
+            <Card key={booking.id || booking._id} padding="lg">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
                 <div className="flex-1">
                   <div className="flex items-center space-x-3 mb-4">
@@ -396,8 +407,14 @@ END:VCALENDAR`;
                         {formatDate(booking.visit_date || booking.visitDate || '')}
                       </h3>
                       <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Booking Ref: {booking.bookingReference}
+                        Booking Ref: {booking.bookingReference || (booking.id || booking._id)}
                       </p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        By: {buyerName} ({buyerEmail})
+                      </p>
+                      {booking.payment_id && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Payment: {booking.payment_id}</p>
+                      )}
                     </div>
                   </div>
 
@@ -405,17 +422,10 @@ END:VCALENDAR`;
                     <div>
                       <p className="text-sm text-gray-600 dark:text-gray-400">Total Tickets</p>
                       <p className="text-lg font-semibold text-gray-900 dark:text-white">
-                        {booking.tickets 
-                          ? booking.tickets.adult.quantity + booking.tickets.child.quantity + booking.tickets.senior.quantity
-                          : booking.quantity}
+                        {totalTickets}
                       </p>
                     </div>
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Total Amount</p>
-                      <p className="text-lg font-semibold text-primary">
-                        {formatCurrency(booking.totalPrice || booking.totalAmount || 0)}
-                      </p>
-                    </div>
+                    {/* Removed duplicate total amount here; right column shows the total */}
                   </div>
 
                   <div className="flex items-center space-x-2">
@@ -437,7 +447,7 @@ END:VCALENDAR`;
                 {booking.qrCode && (
                   <div className="flex flex-col items-center space-y-3">
                     <div className="bg-white p-3 rounded-lg border-2 border-gray-200">
-                      <QRCodeSVG value={booking.bookingReference || booking.id || 'N/A'} size={120} />
+                      <QRCodeSVG value={booking.bookingReference || (booking.id || '')} size={120} />
                     </div>
                     <div className="flex flex-col space-y-2 w-full">
                       <Button 
@@ -445,7 +455,7 @@ END:VCALENDAR`;
                         size="sm"
                         onClick={handleDownloadTicket}
                       >
-                        <Download size={16} className="mr-2" />
+                        <Download size={16} className="mr-1" />
                         Download Ticket
                       </Button>
                       <Button 
@@ -474,8 +484,19 @@ END:VCALENDAR`;
                   </div>
                 )}
               </div>
+
+              <div className="flex flex-col items-end space-y-3 min-w-[220px]">
+                <div className="text-right">
+                  <p className="text-sm text-gray-600 dark:text-gray-400">Total Amount</p>
+                  <p className="text-xl font-bold text-primary tracking-tight">{formatCurrency(totalAmount)}</p>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={goToReceipt} className="border-gray-300 dark:border-gray-600">View Receipt</Button>
+                  <Button variant="primary" size="sm" onClick={goToReceipt}>Download</Button>
+                </div>
+              </div>
             </Card>
-          ))}
+          )})}
         </div>
 
         {/* Cancel Booking Modal */}

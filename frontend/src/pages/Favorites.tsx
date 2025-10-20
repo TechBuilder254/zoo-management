@@ -27,8 +27,8 @@ export const Favorites: React.FC = () => {
     }
   };
 
-  const handleFavoriteToggle = () => {
-    loadFavorites();
+  const handleFavoriteToggle = async () => {
+    await loadFavorites();
   };
 
   if (!loading && favorites.length === 0) {

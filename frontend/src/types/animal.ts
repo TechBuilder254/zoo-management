@@ -59,16 +59,21 @@ export interface AnimalFormData {
   name: string;
   species: string;
   commonName?: string;
-  type: AnimalType;
-  age: number;
-  sex: AnimalSex;
-  weight: number;
+  type?: AnimalType;
+  category?: string; // Support both field names
+  age?: number;
+  sex?: AnimalSex;
+  weight?: number;
   description: string;
-  history: string;
-  conservationStatus: ConservationStatus;
+  history?: string;
+  conservationStatus?: ConservationStatus;
   diet: string;
-  interestingFacts: string[];
-  habitat: Habitat;
+  interestingFacts?: string[];
+  habitat: string | Habitat; // Support both string and Habitat object
+  imageUrl?: string;
+  image_url?: string; // Support both field names
+  lifespan?: string;
+  status?: string;
 }
 
 

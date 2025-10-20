@@ -41,15 +41,20 @@ export const EventsManagement: React.FC = () => {
   }, []);
 
   const handleDeleteEvent = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this event?')) {
-      try {
-        await eventService.delete(id);
-        setEvents(events.filter(event => event._id !== id));
-        toast.success('Event deleted successfully');
-      } catch (error) {
-        console.error('Failed to delete event:', error);
-        toast.error('Failed to delete event');
-      }
+    setSelectedEvent(null);
+    setIsModalOpen(false);
+    try {
+      await toast.promise(
+        eventService.delete(id),
+        {
+          loading: 'Deleting event…',
+          success: 'Event deleted',
+          error: 'Failed to delete event',
+        }
+      );
+      setEvents(prev => prev.filter(ev => (ev.id || (ev as any)._id) !== id));
+    } catch (error) {
+      // toast handles errors
     }
   };
 
@@ -81,30 +86,28 @@ export const EventsManagement: React.FC = () => {
     setIsSubmitting(true);
     try {
       // Transform frontend data to backend format
+      const startIso = new Date(`${data.eventDate}T${data.startTime}`).toISOString();
+      const endIso = new Date(`${data.eventDate}T${data.endTime}`).toISOString();
       const backendData = {
         title: data.title,
         description: data.description,
         type: data.category,
-        startDate: `${data.eventDate}T${data.startTime}:00.000Z`,
-        endDate: `${data.eventDate}T${data.endTime}:00.000Z`,
+        startDate: startIso,
+        endDate: endIso,
         location: data.location,
-        capacity: Number(data.capacity),
-        price: 0, // Default price
+        capacity: Number(data.capacity) || 0,
+        price: 0,
         imageUrl: data.imageUrl || ''
       };
 
       if (modalType === 'add') {
-        await eventService.create(backendData);
+        const created = await eventService.create(backendData);
         toast.success('Event created successfully');
-        // Refresh events list
-        const updatedEvents = await eventService.getAll();
-        setEvents(updatedEvents);
+        setEvents(prev => [created, ...prev]);
       } else if (modalType === 'edit' && selectedEvent) {
-        await eventService.update(selectedEvent._id || selectedEvent.id, backendData);
+        const updated = await eventService.update((selectedEvent.id || (selectedEvent as any)._id) as string, backendData);
         toast.success('Event updated successfully');
-        // Refresh events list
-        const updatedEvents = await eventService.getAll();
-        setEvents(updatedEvents);
+        setEvents(prev => prev.map(ev => (ev.id === updated.id ? updated : ev)));
       }
       handleCloseModal();
     } catch (error) {

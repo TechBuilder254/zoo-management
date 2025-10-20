@@ -86,26 +86,26 @@ export const TicketSelector: React.FC<TicketSelectorProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-4">
               <button
                 onClick={() => handleDecrement(ticket.label.toLowerCase() as 'adult' | 'child' | 'senior')}
                 disabled={ticket.quantity === 0}
-                className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                className="w-12 h-12 flex items-center justify-center rounded-full bg-primary text-white hover:bg-primary-dark disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors shadow-md"
                 aria-label={`Decrease ${ticket.label} tickets`}
               >
-                <Minus size={18} />
+                <Minus size={20} strokeWidth={3} />
               </button>
 
-              <span className="w-12 text-center text-xl font-semibold text-gray-900 dark:text-white">
+              <span className="w-16 text-center text-2xl font-bold text-gray-900 dark:text-white bg-gray-100 dark:bg-gray-700 rounded-lg py-2">
                 {ticket.quantity}
               </span>
 
               <button
                 onClick={() => handleIncrement(ticket.label.toLowerCase() as 'adult' | 'child' | 'senior')}
-                className="w-10 h-10 flex items-center justify-center rounded-full border-2 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300 hover:border-primary hover:text-primary transition-colors"
+                className="w-12 h-12 flex items-center justify-center rounded-full bg-primary text-white hover:bg-primary-dark transition-colors shadow-md"
                 aria-label={`Increase ${ticket.label} tickets`}
               >
-                <Plus size={18} />
+                <Plus size={20} strokeWidth={3} />
               </button>
             </div>
           </div>

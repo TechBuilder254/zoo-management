@@ -7,21 +7,18 @@ import { Card } from '../common/Card';
 
 interface ReviewFormProps {
   animalId: string;
-  onSubmit: (data: ReviewFormData) => Promise<void>;
+  onSubmit: (data: ReviewFormData & { isAnonymous?: boolean }) => Promise<void>;
 }
 
 export const ReviewForm: React.FC<ReviewFormProps> = ({ animalId, onSubmit }) => {
   const [rating, setRating] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   
   const { register, handleSubmit, formState: { errors }, reset } = useForm<{ comment: string }>();
 
   const handleFormSubmit = async (data: { comment: string }) => {
-    console.log('ReviewForm: handleFormSubmit called with:', data);
-    console.log('ReviewForm: rating is:', rating);
-    
     if (rating === 0) {
-      console.log('ReviewForm: No rating selected, returning');
       return;
     }
 
@@ -31,14 +28,13 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ animalId, onSubmit }) =>
         animalId,
         rating,
         comment: data.comment,
+        isAnonymous,
       };
-      console.log('ReviewForm: Submitting review data:', reviewData);
       await onSubmit(reviewData);
-      console.log('ReviewForm: Review submitted successfully');
       reset();
       setRating(0);
+      setIsAnonymous(false);
     } catch (error) {
-      console.error('ReviewForm: Error submitting review:', error);
       throw error;
     } finally {
       setIsSubmitting(false);
@@ -46,35 +42,14 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ animalId, onSubmit }) =>
   };
 
   return (
-    <Card padding="md">
-      <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-        Write a Review
-      </h3>
-
-      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+    <Card padding="lg">
+      <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
         {/* Rating */}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-            Your Rating <span className="text-red-500">*</span>
+            Rating <span className="text-red-500">*</span>
           </label>
-          <div className="flex items-center space-x-2">
-            <RatingStars
-              rating={rating}
-              interactive
-              onRatingChange={setRating}
-              size={28}
-            />
-            {rating > 0 && (
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                ({rating} out of 5)
-              </span>
-            )}
-          </div>
-          {rating === 0 && (
-            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Please select a rating
-            </p>
-          )}
+          <RatingStars rating={rating} interactive onRatingChange={setRating} size={24} />
         </div>
 
         {/* Comment */}
@@ -105,12 +80,25 @@ export const ReviewForm: React.FC<ReviewFormProps> = ({ animalId, onSubmit }) =>
           )}
         </div>
 
+        {/* Anonymous toggle */}
+        <div className="flex items-center space-x-2">
+          <input
+            id="anonymous"
+            type="checkbox"
+            checked={isAnonymous}
+            onChange={(e) => setIsAnonymous(e.target.checked)}
+            className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
+          />
+          <label htmlFor="anonymous" className="text-sm text-gray-700 dark:text-gray-300">
+            Post anonymously
+          </label>
+        </div>
+
         <Button
           type="submit"
           variant="primary"
           fullWidth
           isLoading={isSubmitting}
-          disabled={rating === 0 || isSubmitting}
         >
           Submit Review
         </Button>

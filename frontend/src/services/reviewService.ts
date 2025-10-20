@@ -14,7 +14,10 @@ export interface ReviewsResponse {
 export const reviewService = {
   getByAnimalId: async (animalId: string): Promise<Review[]> => {
     try {
-      const { data, error } = await supabase
+      // Get current user to show their pending reviews
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      let query = supabase
         .from('reviews')
         .select(`
           *,
@@ -25,8 +28,17 @@ export const reviewService = {
           )
         `)
         .eq('animal_id', animalId)
-        .eq('status', 'APPROVED')
         .order('created_at', { ascending: false });
+
+      // If user is logged in, show approved reviews + their own pending reviews
+      if (user) {
+        query = query.or(`status.eq.APPROVED,and(status.eq.PENDING,user_id.eq.${user.id})`);
+      } else {
+        // If not logged in, only show approved reviews
+        query = query.eq('status', 'APPROVED');
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         console.error('Error fetching reviews:', error);
@@ -40,7 +52,7 @@ export const reviewService = {
     }
   },
 
-  create: async (data: ReviewFormData): Promise<Review> => {
+  create: async (data: ReviewFormData & { isAnonymous?: boolean }): Promise<Review> => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
@@ -49,6 +61,43 @@ export const reviewService = {
         throw new Error('Animal ID is required');
       }
 
+      // First, ensure user exists in custom users table
+      const { error: userError } = await supabase
+        .from('users')
+        .select('id')
+        .eq('id', user.id)
+        .single();
+
+      if (userError && userError.code === 'PGRST116') {
+        // User doesn't exist in custom users table, create them
+        console.log('Creating user in custom users table:', user.id);
+        const { data: newUser, error: createError } = await supabase
+          .from('users')
+          .insert([
+            {
+              id: user.id,
+              email: user.email || '',
+              password: 'supabase_auth_user', // Placeholder since Supabase handles auth
+              name: user.user_metadata?.name || user.email || 'User',
+              role: user.user_metadata?.role || 'VISITOR',
+              created_at: user.created_at || new Date().toISOString(),
+              updated_at: user.updated_at || new Date().toISOString(),
+            },
+          ])
+          .select()
+          .single();
+
+        if (createError) {
+          console.error('Error creating user:', createError);
+          throw new Error(`Failed to create user: ${createError.message}`);
+        }
+        console.log('User created successfully:', newUser.id);
+      } else if (userError) {
+        console.error('Error checking user:', userError);
+        throw new Error(`Failed to check user: ${userError.message}`);
+      }
+
+      // Now create the review
       const { data: result, error } = await supabase
         .from('reviews')
         .insert([{
@@ -56,7 +105,8 @@ export const reviewService = {
           animal_id: data.animalId,
           rating: data.rating,
           comment: data.comment,
-          status: 'PENDING'
+          status: 'PENDING', // Reviews need approval before being public
+          is_anonymous: !!data.isAnonymous,
         }])
         .select(`
           *,
@@ -73,7 +123,7 @@ export const reviewService = {
         throw new Error(`Failed to create review: ${error.message}`);
       }
 
-      return result;
+      return result as Review;
     } catch (error) {
       console.error('Error in reviewService.create:', error);
       if (error instanceof Error) {

@@ -1,6 +1,5 @@
 import { supabase, getEmailRedirectUrl } from '../config/supabase';
 import { User, LoginCredentials, RegisterData } from '../types';
-import configService from './configService';
 
 export interface SupabaseAuthResponse {
   user: User | null;

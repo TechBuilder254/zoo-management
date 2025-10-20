@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Check, X, Calendar } from 'lucide-react';
+import { Search, Check, X, Calendar, Trash2 } from 'lucide-react';
 import { Card } from '../../components/common/Card';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
@@ -10,12 +10,14 @@ import { reviewService } from '../../services/reviewService';
 import { Review } from '../../types';
 import { SentimentBadge } from '../../components/reviews/SentimentBadge';
 import toast from 'react-hot-toast';
+import { useAuth } from '../../hooks/useAuth';
 
 const ReviewRow: React.FC<{ 
   review: Review; 
   onApprove: (id: string) => void;
   onReject: (id: string) => void;
-}> = ({ review, onApprove, onReject }) => {
+  onDelete: (id: string) => void;
+}> = ({ review, onApprove, onReject, onDelete }) => {
   const sentiment = review.sentiment 
     ? { label: review.sentiment as 'POSITIVE' | 'NEGATIVE' | 'NEUTRAL', score: review.sentimentScore || 0.5 }
     : null;
@@ -33,7 +35,12 @@ const ReviewRow: React.FC<{
       <td className="px-6 py-4">
         <div>
           <p className="font-medium text-gray-900 dark:text-white">{review.animal?.name || 'Unknown Animal'}</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{review.user?.name || 'Anonymous'}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {review.users?.name || review.user?.name || 'Anonymous'}
+            {review.is_anonymous && (
+              <span className="ml-2 px-2 py-0.5 text-xxs rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-700">(anonymous)</span>
+            )}
+          </p>
         </div>
       </td>
       <td className="px-6 py-4">
@@ -76,6 +83,15 @@ const ReviewRow: React.FC<{
             </Button>
           </>
         )}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-red-600 hover:text-red-700"
+          title="Delete review"
+          onClick={() => onDelete(review.id)}
+        >
+          <Trash2 size={16} />
+        </Button>
       </td>
     </tr>
   );
@@ -90,6 +106,9 @@ export const ReviewModeration: React.FC = () => {
   // Modal states
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedReview, setSelectedReview] = useState<Review | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -124,6 +143,32 @@ export const ReviewModeration: React.FC = () => {
       toast.success('Review rejected');
     } catch (error) {
       toast.error('Failed to reject review');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const isAdmin = user?.role === 'ADMIN' || user?.role === 'admin';
+    if (!isAdmin) {
+      toast.error('You do not have permission to delete reviews');
+      return;
+    }
+    setConfirmDeleteId(id);
+  };
+
+  const performDelete = async () => {
+    if (!confirmDeleteId) return;
+    try {
+      await toast.promise(
+        reviewService.delete(confirmDeleteId),
+        {
+          loading: 'Deleting review…',
+          success: 'Review deleted',
+          error: 'Failed to delete review',
+        }
+      );
+      setReviews(prev => prev.filter(r => r.id !== confirmDeleteId));
+    } finally {
+      setConfirmDeleteId(null);
     }
   };
 
@@ -279,9 +324,10 @@ export const ReviewModeration: React.FC = () => {
                     filteredReviews.map((review) => (
                       <ReviewRow 
                         key={review.id} 
-                        review={review}
-                        onApprove={handleApprove}
+                        review={review} 
+                        onApprove={handleApprove} 
                         onReject={handleReject}
+                        onDelete={handleDelete}
                       />
                     ))
                   ) : (
@@ -461,6 +507,26 @@ export const ReviewModeration: React.FC = () => {
                 )}
               </div>
             )}
+          </Modal>
+
+          {/* Delete confirmation modal */}
+          <Modal
+            isOpen={!!confirmDeleteId}
+            onClose={() => setConfirmDeleteId(null)}
+            title="Delete Review"
+            size="sm"
+          >
+            <div className="space-y-4">
+              <p className="text-gray-700 dark:text-gray-300">
+                Are you sure you want to permanently delete this review? This action cannot be undone.
+              </p>
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setConfirmDeleteId(null)}>Cancel</Button>
+                <Button variant="primary" onClick={performDelete} className="bg-red-600 hover:bg-red-700">
+                  Delete
+                </Button>
+              </div>
+            </div>
           </Modal>
         </AdminLayout>
   );

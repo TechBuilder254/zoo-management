@@ -45,6 +45,50 @@ export interface UpdateHealthRecordData {
   status?: string;
 }
 
+// Internal: map DB row to frontend HealthRecord
+const mapDbToFrontend = (row: any): HealthRecord => {
+  const [typeFromNotes, statusFromNotes] = (row.notes || '').split('|');
+  return {
+    id: row.id,
+    animal_id: row.animal_id,
+    type: (typeFromNotes as any) || 'CHECKUP',
+    description: row.diagnosis || '',
+    veterinarian: row.vet_name || '',
+    medications: row.treatment ? String(row.treatment).split(',').map((s: string) => s.trim()).filter(Boolean) : [],
+    next_appointment: row.checkup_date || undefined,
+    status: (statusFromNotes as any) || 'SCHEDULED',
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    animal: {
+      id: row.animals?.id,
+      name: row.animals?.name,
+      species: row.animals?.species,
+      image_url: row.animals?.image_url,
+    },
+  };
+};
+
+// Internal: map frontend payload to DB columns
+const mapCreateToDb = (data: CreateHealthRecordData) => ({
+  animal_id: data.animal_id,
+  diagnosis: data.description,
+  treatment: (data.medications || []).join(', '),
+  vet_name: data.veterinarian,
+  notes: `${data.type || 'CHECKUP'}|${data.status || 'SCHEDULED'}`,
+  checkup_date: data.next_appointment || new Date().toISOString(),
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+});
+
+const mapUpdateToDb = (data: UpdateHealthRecordData) => ({
+  diagnosis: data.description,
+  treatment: data.medications ? data.medications.join(', ') : undefined,
+  vet_name: data.veterinarian,
+  notes: data.type || data.status ? `${data.type || 'CHECKUP'}|${data.status || 'SCHEDULED'}` : undefined,
+  checkup_date: data.next_appointment,
+  updated_at: new Date().toISOString(),
+});
+
 export const healthService = {
   // Get all health records
   getAll: async (params?: { animalId?: string; status?: string; type?: string }): Promise<HealthRecord[]> => {
@@ -65,10 +109,11 @@ export const healthService = {
         query = query.eq('animal_id', params.animalId);
       }
       if (params?.status) {
-        query = query.eq('status', params.status);
+        // filter via notes second segment
+        query = query.like('notes', `%|${params.status}%`);
       }
       if (params?.type) {
-        query = query.eq('type', params.type);
+        query = query.like('notes', `${params.type}|%`);
       }
 
       const { data, error } = await query.order('created_at', { ascending: false });
@@ -78,7 +123,7 @@ export const healthService = {
         throw error;
       }
 
-      return data || [];
+      return (data || []).map(mapDbToFrontend);
     } catch (error) {
       console.error('Error in healthService.getAll:', error);
       return [];
@@ -107,7 +152,7 @@ export const healthService = {
         throw error;
       }
 
-      return data;
+      return mapDbToFrontend(data);
     } catch (error) {
       console.error('Error in healthService.getById:', error);
       throw error;
@@ -117,19 +162,10 @@ export const healthService = {
   // Create health record
   create: async (data: CreateHealthRecordData): Promise<HealthRecord> => {
     try {
+      const payload = mapCreateToDb(data);
       const { data: result, error } = await supabase
         .from('health_records')
-        .insert([{
-          animal_id: data.animal_id,
-          type: data.type,
-          description: data.description,
-          veterinarian: data.veterinarian,
-          medications: data.medications || [],
-          next_appointment: data.next_appointment,
-          status: data.status || 'SCHEDULED',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }])
+        .insert([payload])
         .select(`
           *,
           animals!health_records_animal_id_fkey (
@@ -146,7 +182,7 @@ export const healthService = {
         throw error;
       }
 
-      return result;
+      return mapDbToFrontend(result);
     } catch (error) {
       console.error('Error in healthService.create:', error);
       throw error;
@@ -156,17 +192,10 @@ export const healthService = {
   // Update health record
   update: async (id: string, data: UpdateHealthRecordData): Promise<HealthRecord> => {
     try {
+      const payload = mapUpdateToDb(data);
       const { data: result, error } = await supabase
         .from('health_records')
-        .update({
-          type: data.type,
-          description: data.description,
-          veterinarian: data.veterinarian,
-          medications: data.medications,
-          next_appointment: data.next_appointment,
-          status: data.status,
-          updated_at: new Date().toISOString(),
-        })
+        .update(payload)
         .eq('id', id)
         .select(`
           *,
@@ -184,7 +213,7 @@ export const healthService = {
         throw error;
       }
 
-      return result;
+      return mapDbToFrontend(result);
     } catch (error) {
       console.error('Error in healthService.update:', error);
       throw error;
@@ -219,17 +248,17 @@ export const healthService = {
       const { count: upcomingAppointments } = await supabase
         .from('health_records')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'SCHEDULED');
+        .like('notes', `%|SCHEDULED%`);
 
       const { count: healthAlerts } = await supabase
         .from('health_records')
         .select('*', { count: 'exact', head: true })
-        .eq('type', 'EMERGENCY');
+        .like('notes', `EMERGENCY|%`);
 
       const { count: activeTreatments } = await supabase
         .from('health_records')
         .select('*', { count: 'exact', head: true })
-        .eq('status', 'IN_PROGRESS');
+        .like('notes', `%|IN_PROGRESS%`);
 
       return {
         totalRecords: totalRecords || 0,
@@ -262,15 +291,15 @@ export const healthService = {
             image_url
           )
         `)
-        .eq('status', 'SCHEDULED')
-        .order('next_appointment', { ascending: true });
+        .like('notes', `%|SCHEDULED%`)
+        .order('checkup_date', { ascending: true });
 
       if (error) {
         console.error('Error fetching upcoming appointments:', error);
         throw error;
       }
 
-      return data || [];
+      return (data || []).map(mapDbToFrontend);
     } catch (error) {
       console.error('Error in healthService.getUpcomingAppointments:', error);
       return [];
@@ -291,7 +320,7 @@ export const healthService = {
             image_url
           )
         `)
-        .eq('type', 'EMERGENCY')
+        .like('notes', `EMERGENCY|%`)
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -299,7 +328,7 @@ export const healthService = {
         throw error;
       }
 
-      return data || [];
+      return (data || []).map(mapDbToFrontend);
     } catch (error) {
       console.error('Error in healthService.getHealthAlerts:', error);
       return [];

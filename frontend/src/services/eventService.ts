@@ -38,7 +38,7 @@ const mapBackendEventToFrontend = (backendEvent: BackendEvent): Event => {
 export interface CreateEventData {
   title: string;
   description: string;
-  type: string;
+  type: string; // accepted from UI but not stored directly in DB
   startDate: string;
   endDate: string;
   location: string;
@@ -50,7 +50,7 @@ export interface CreateEventData {
 export interface UpdateEventData {
   title?: string;
   description?: string;
-  type?: string;
+  type?: string; // accepted from UI but not stored directly in DB
   startDate?: string;
   endDate?: string;
   location?: string;
@@ -143,7 +143,6 @@ export const eventService = {
         .insert([{
           title: data.title,
           description: data.description,
-          type: data.type,
           start_date: data.startDate,
           end_date: data.endDate,
           location: data.location,
@@ -174,12 +173,11 @@ export const eventService = {
       
       if (data.title) updateData.title = data.title;
       if (data.description) updateData.description = data.description;
-      if (data.type) updateData.type = data.type;
       if (data.startDate) updateData.start_date = data.startDate;
       if (data.endDate) updateData.end_date = data.endDate;
       if (data.location) updateData.location = data.location;
-      if (data.capacity) updateData.capacity = data.capacity;
-      if (data.price) updateData.price = data.price;
+      if (data.capacity !== undefined) updateData.capacity = data.capacity;
+      if (data.price !== undefined) updateData.price = data.price;
       if (data.status) updateData.status = data.status;
       if (data.imageUrl) updateData.image_url = data.imageUrl;
 

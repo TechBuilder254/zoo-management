@@ -29,6 +29,8 @@ export interface Booking {
   user_id: string; // snake_case from Supabase
   created_at: string; // snake_case from Supabase
   updated_at: string; // snake_case from Supabase
+  booking_reference?: string; // snake_case from Supabase
+  ticket_breakdown?: string; // snake_case from Supabase
   users?: {
     id: string;
     name: string;
@@ -69,6 +71,7 @@ export interface CreateBookingData {
   ticket_type?: string;
   quantity?: number;
   promo_code_id?: string;
+  total_price?: number;
   // Compatibility fields
   visitDate?: string;
   tickets?: Tickets;

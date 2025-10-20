@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { Button } from '../common/Button';
 import { Input } from '../common/Input';
 import { Modal } from '../common/Modal';
-import { HealthRecord } from '../../services/healthService';
+import { HealthRecord, CreateHealthRecordData } from '../../services/healthService';
 import { animalService } from '../../services/animalService';
 import { Animal } from '../../types/animal';
 import toast from 'react-hot-toast';
@@ -13,14 +13,14 @@ interface HealthRecordFormData {
   type: string;
   description: string;
   veterinarian: string;
-  medications: string;
-  next_appointment: string;
+  medications: string; // comma separated in UI
+  next_appointment: string; // date input string
   status: string;
 }
 
 interface HealthRecordFormProps {
   record?: HealthRecord | null;
-  onSubmit: (data: HealthRecordFormData) => void;
+  onSubmit: (data: CreateHealthRecordData) => void;
   onCancel: () => void;
   isLoading?: boolean;
 }
@@ -44,7 +44,7 @@ export const HealthRecordForm: React.FC<HealthRecordFormProps> = ({
       type: record.type,
       description: record.description,
       veterinarian: record.veterinarian,
-      medications: record.medications.join(', '),
+      medications: (record.medications || []).join(', '),
       next_appointment: record.next_appointment ? record.next_appointment.split('T')[0] : '',
       status: record.status
     } : {
@@ -77,15 +77,21 @@ export const HealthRecordForm: React.FC<HealthRecordFormProps> = ({
   }, []);
 
   const handleFormSubmit = (data: HealthRecordFormData) => {
-    // Convert medications string to array
-    const medicationsArray = data.medications 
+    const medicationsArray = data.medications
       ? data.medications.split(',').map(med => med.trim()).filter(med => med.length > 0)
       : [];
 
-    onSubmit({
-      ...data,
-      medications: medicationsArray.join(', ')
-    });
+    const payload: CreateHealthRecordData = {
+      animal_id: data.animal_id,
+      type: data.type,
+      description: data.description,
+      veterinarian: data.veterinarian,
+      medications: medicationsArray,
+      next_appointment: data.next_appointment || undefined,
+      status: data.status,
+    };
+
+    onSubmit(payload);
   };
 
   return (

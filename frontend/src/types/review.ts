@@ -13,6 +13,7 @@ export interface Review {
   helpful: number;
   created_at: string; // snake_case from Supabase
   updated_at: string; // snake_case from Supabase
+  is_anonymous?: boolean; // snake_case from Supabase (optional for backward compatibility)
   users?: {
     id: string;
     name: string;

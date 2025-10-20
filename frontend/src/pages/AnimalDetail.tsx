@@ -4,6 +4,7 @@ import { MapPin, Calendar, Info, ArrowLeft, Utensils } from 'lucide-react';
 import { useAnimal } from '../hooks/useAnimals';
 import { useAuth } from '../hooks/useAuth';
 import { reviewService } from '../services/reviewService';
+import { animalService } from '../services/animalService';
 import { Review } from '../types';
 import { Card } from '../components/common/Card';
 import { Button } from '../components/common/Button';
@@ -25,10 +26,13 @@ export const AnimalDetail: React.FC = () => {
   const [reviewsLoading, setReviewsLoading] = useState(false);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   useEffect(() => {
     if (animal) {
       loadReviews();
+      checkFavoriteStatus();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [animal]);
@@ -47,6 +51,47 @@ export const AnimalDetail: React.FC = () => {
       console.error('AnimalDetail: Failed to load reviews:', error);
     } finally {
       setReviewsLoading(false);
+    }
+  };
+
+  const checkFavoriteStatus = async () => {
+    if (!animal || !isAuthenticated) return;
+    
+    try {
+      const favorites = await animalService.getFavorites();
+      const animalId = animal.id || animal._id;
+      const isFavorited = favorites.some(fav => (fav.id || fav._id) === animalId);
+      setIsFavorite(isFavorited);
+    } catch (error) {
+      console.error('Error checking favorite status:', error);
+    }
+  };
+
+  const handleFavoriteToggle = async () => {
+    if (!animal || !isAuthenticated) return;
+    
+    const animalId = animal.id || animal._id;
+    if (!animalId) {
+      toast.error('Animal ID not found');
+      return;
+    }
+    
+    setFavoriteLoading(true);
+    try {
+      if (isFavorite) {
+        await animalService.removeFromFavorites(animalId);
+        setIsFavorite(false);
+        toast.success('Removed from favorites');
+      } else {
+        await animalService.addToFavorites(animalId);
+        setIsFavorite(true);
+        toast.success('Added to favorites');
+      }
+    } catch (error) {
+      console.error('Error toggling favorite:', error);
+      toast.error('Failed to update favorites');
+    } finally {
+      setFavoriteLoading(false);
     }
   };
 
@@ -74,6 +119,28 @@ export const AnimalDetail: React.FC = () => {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       toast.error(`Failed to submit review: ${errorMessage}`);
       throw error;
+    }
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    try {
+      await reviewService.delete(reviewId);
+      toast.success('Review deleted');
+      await loadReviews();
+    } catch (error) {
+      console.error('Delete review error:', error);
+      toast.error('Failed to delete review');
+    }
+  };
+
+  const handleUpdateReview = async (reviewId: string, data: { rating?: number; comment?: string }) => {
+    try {
+      await reviewService.update(reviewId, data);
+      toast.success('Review updated');
+      await loadReviews();
+    } catch (error) {
+      console.error('Update review error:', error);
+      toast.error('Failed to update review');
     }
   };
 
@@ -227,7 +294,11 @@ export const AnimalDetail: React.FC = () => {
               </div>
             </div>
 
-            <FavoriteButton isFavorite={false} onClick={() => {}} disabled={!isAuthenticated} />
+            <FavoriteButton 
+              isFavorite={isFavorite} 
+              onClick={handleFavoriteToggle} 
+              disabled={!isAuthenticated || favoriteLoading} 
+            />
           </div>
         </div>
 
@@ -250,7 +321,7 @@ export const AnimalDetail: React.FC = () => {
               <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
                 Reviews
               </h2>
-              <ReviewList reviews={reviews} loading={reviewsLoading} />
+              <ReviewList reviews={reviews} loading={reviewsLoading} onDelete={handleDeleteReview} onUpdate={handleUpdateReview} />
             </Card>
 
             {/* Review Form */}

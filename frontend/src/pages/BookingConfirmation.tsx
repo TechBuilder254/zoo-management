@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { bookingService } from '../services/bookingService';
-import { BookingConfirmation as BookingConfirmationComponent } from '../components/booking/BookingConfirmation';
+import { Receipt } from '../components/booking/Receipt';
 import { Booking } from '../types';
-import toast from 'react-hot-toast';
 import jsPDF from 'jspdf';
 import QRCode from 'qrcode';
 
 export const BookingConfirmation: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [booking, setBooking] = useState<Booking | null>(null);
-  const [loading, setLoading] = useState(true);
+  const location = useLocation() as any;
+  const [booking, setBooking] = useState<Booking | null>(location.state?.booking || null);
+  const [loading, setLoading] = useState(!location.state?.booking);
 
   useEffect(() => {
     const fetchBooking = async () => {
@@ -22,297 +22,176 @@ export const BookingConfirmation: React.FC = () => {
 
       try {
         const bookingData = await bookingService.getById(id);
-        setBooking(bookingData);
+        setBooking(prev => ({ ...prev, ...bookingData } as any) || bookingData);
       } catch (error) {
         console.error('Failed to fetch booking:', error);
-        toast.error('Failed to load booking details');
-        navigate('/booking');
+        // Do not redirect; keep showing the booking from navigation state if available
       } finally {
         setLoading(false);
       }
     };
 
-    fetchBooking();
-  }, [id, navigate]);
-
-  const generateQRCodeImage = async (bookingRef: string): Promise<string> => {
-    try {
-      console.log('Generating QR code for PDF:', bookingRef);
-      
-      // Create a canvas element for QR code generation
-      const canvas = document.createElement('canvas');
-      canvas.width = 120;
-      canvas.height = 120;
-      
-      // Generate QR code directly to canvas
-      await QRCode.toCanvas(canvas, bookingRef, {
-        width: 120,
-        margin: 2,
-        color: {
-          dark: '#000000',
-          light: '#FFFFFF'
-        },
-        errorCorrectionLevel: 'M'
-      });
-      
-      // Convert canvas to data URL
-      const qrDataURL = canvas.toDataURL('image/png');
-      console.log('QR Code generated successfully for PDF, length:', qrDataURL.length);
-      return qrDataURL;
-    } catch (error) {
-      console.error('QR Code generation failed:', error);
-      
-      // Fallback: try the original method
-      try {
-        const qrDataURL = await QRCode.toDataURL(bookingRef, {
-          width: 120,
-          margin: 2,
-          color: {
-            dark: '#000000',
-            light: '#FFFFFF'
-          },
-          errorCorrectionLevel: 'M'
-        });
-        console.log('QR Code generated with fallback method');
-        return qrDataURL;
-      } catch (fallbackError) {
-        console.error('Fallback QR Code generation also failed:', fallbackError);
-        return '';
-      }
+    // If we already have booking from state, try to refresh but don't block UI
+    if (location.state?.booking) {
+      fetchBooking();
+    } else {
+      setLoading(true);
+      fetchBooking();
     }
-  };
+  }, [id, navigate]);
 
   const handleDownload = async () => {
     if (!booking) return;
-    
-    // Create a new PDF document
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.width;
-    const pageHeight = doc.internal.pageSize.height;
-    
-    // Colors
-    const primaryColor = '#10B981'; // Green
-    const darkGray = '#374151';
-    const lightGray = '#6B7280';
-    const bgGray = '#F9FAFB';
-    const white = '#FFFFFF';
-    
-    // Header with logo and title
-    doc.setFillColor(primaryColor);
-    doc.rect(0, 0, pageWidth, 40, 'F');
-    
-    // Zoo name and logo
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(24);
+
+    const doc = new jsPDF('p', 'pt', 'a4');
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const margin = 40;
+
+    const primary = '#10B981';
+    const dark = '#1F2937';
+    const gray = '#6B7280';
+    const lightGray = '#E5E7EB';
+
+    // Header
+    doc.setFillColor(primary);
+    doc.rect(0, 0, pageWidth, 80, 'F');
+    doc.setTextColor('#ffffff');
     doc.setFont('helvetica', 'bold');
-    doc.text('WILDLIFE ZOO', 20, 25);
-    
-    // Subtitle
+    doc.setFontSize(22);
+    doc.text('WILDLIFE ZOO', margin, 50);
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    doc.text('Electronic Ticket Confirmation', 20, 35);
-    
-    // Date and time
-    doc.setTextColor(lightGray);
-    doc.setFontSize(10);
-    doc.text(`Generated: ${new Date().toLocaleString()}`, pageWidth - 80, 35);
-    
-    // Booking reference section
-    doc.setFillColor(bgGray);
-    doc.rect(15, 50, pageWidth - 30, 25, 'F');
-    
-    doc.setTextColor(darkGray);
+    doc.text('E-TICKET', pageWidth - margin - 70, 50);
+
+    const bookingRef = booking.bookingReference || (booking as any).booking_reference || booking.id || 'N/A';
+
+    // Outer card
+    const cardY = 100;
+    const cardH = pageHeight - cardY - margin;
+    doc.setFillColor('#ffffff');
+    doc.setDrawColor(lightGray);
+    doc.roundedRect(margin - 4, cardY - 4, pageWidth - margin * 2 + 8, cardH, 10, 10, 'S');
+
+    let y = cardY + 10;
+
+    // Booking reference + QR
+    doc.setTextColor(dark);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.text('Booking Reference', margin, y + 10);
+    doc.setFontSize(13);
+    doc.setTextColor(primary);
+    doc.text(bookingRef, margin, y + 28);
+
+    // (QR moved to bottom area)
+
+    // Visit details
+    y += 70;
+    doc.setTextColor(dark);
+    doc.setFont('helvetica', 'bold');
     doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('BOOKING REFERENCE', 20, 65);
-    
-    doc.setFontSize(18);
-    doc.setTextColor(primaryColor);
-    doc.text(booking.bookingReference || booking.id || 'N/A', 20, 75);
-    
-    // Visit details section
-    let yPos = 90;
-    doc.setTextColor(darkGray);
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    doc.text('VISIT DETAILS', 20, yPos);
-    
-    yPos += 10;
+    doc.text('Visit Details', margin, y);
+
+    y += 20;
     doc.setFont('helvetica', 'normal');
-    doc.setTextColor(lightGray);
-    doc.text('Visit Date:', 20, yPos);
-    doc.setTextColor(darkGray);
-    doc.text(new Date(booking.visit_date || booking.visitDate || '').toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    }), 60, yPos);
-    
-    yPos += 8;
-    doc.setTextColor(lightGray);
-    doc.text('Customer:', 20, yPos);
-    doc.setTextColor(darkGray);
-    doc.text(booking.user?.name || 'Guest', 60, yPos);
-    
-    yPos += 8;
-    doc.setTextColor(lightGray);
-    doc.text('Email:', 20, yPos);
-    doc.setTextColor(darkGray);
-    doc.text(booking.user?.email || 'N/A', 60, yPos);
-    
-    // Ticket breakdown section
-    yPos += 20;
-    doc.setFillColor(bgGray);
-    doc.rect(15, yPos - 5, pageWidth - 30, 15, 'F');
-    
-    doc.setTextColor(darkGray);
-    doc.setFontSize(12);
+    doc.setTextColor(gray);
+    doc.text('Visit Date', margin, y);
+    doc.setTextColor(dark);
+    const visitDate = new Date(booking.visit_date || (booking as any).visitDate || '').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    doc.text(visitDate || '—', margin + 120, y);
+
+    y += 18;
+    doc.setTextColor(gray);
+    doc.text('Customer', margin, y);
+    doc.setTextColor(dark);
+    doc.text(booking.users?.name || (booking as any).user?.name || 'Guest', margin + 120, y);
+
+    y += 18;
+    doc.setTextColor(gray);
+    doc.text('Email', margin, y);
+    doc.setTextColor(dark);
+    doc.text(booking.users?.email || (booking as any).user?.email || 'N/A', margin + 120, y);
+
+    // Divider
+    y += 22;
+    doc.setDrawColor(lightGray);
+    doc.line(margin, y, pageWidth - margin, y);
+
+    // Ticket breakdown
+    y += 26;
+    doc.setTextColor(dark);
     doc.setFont('helvetica', 'bold');
-    doc.text('TICKET BREAKDOWN', 20, yPos + 5);
-    
-    yPos += 20;
-    
-    if (booking.tickets) {
-      
-      if (booking.tickets.adult.quantity > 0) {
-        doc.setTextColor(darkGray);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`Adult Tickets (13-64 years)`, 20, yPos);
-        doc.text(`× ${booking.tickets.adult.quantity}`, pageWidth - 100, yPos);
-        doc.text(`KSh ${(booking.tickets.adult.price * booking.tickets.adult.quantity).toLocaleString()}`, pageWidth - 40, yPos);
-        yPos += 8;
-      }
-      
-      if (booking.tickets.child.quantity > 0) {
-        doc.text(`Child Tickets (3-12 years)`, 20, yPos);
-        doc.text(`× ${booking.tickets.child.quantity}`, pageWidth - 100, yPos);
-        doc.text(`KSh ${(booking.tickets.child.price * booking.tickets.child.quantity).toLocaleString()}`, pageWidth - 40, yPos);
-        yPos += 8;
-      }
-      
-      if (booking.tickets.senior.quantity > 0) {
-        doc.text(`Senior Tickets (65+ years)`, 20, yPos);
-        doc.text(`× ${booking.tickets.senior.quantity}`, pageWidth - 100, yPos);
-        doc.text(`KSh ${(booking.tickets.senior.price * booking.tickets.senior.quantity).toLocaleString()}`, pageWidth - 40, yPos);
-        yPos += 8;
-      }
-    } else {
-      doc.setTextColor(darkGray);
+    doc.setFontSize(14);
+    doc.text('Ticket Breakdown', margin, y);
+
+    y += 16;
+    const row = (label: string, qty: number, price: number) => {
+      if (!qty) return;
       doc.setFont('helvetica', 'normal');
-      doc.text(`${booking.ticket_type || booking.ticketType} Tickets`, 20, yPos);
-      doc.text(`× ${booking.quantity}`, pageWidth - 100, yPos);
-      doc.text(`KSh ${booking.totalPrice?.toLocaleString()}`, pageWidth - 40, yPos);
-      yPos += 8;
-    }
-    
-    // Total amount section
-    yPos += 10;
-    doc.setDrawColor(primaryColor);
-    doc.setLineWidth(1);
-    doc.line(20, yPos, pageWidth - 20, yPos);
-    
-    yPos += 10;
-    doc.setTextColor(darkGray);
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('TOTAL AMOUNT', 20, yPos);
-    doc.setTextColor(primaryColor);
-    doc.setFontSize(16);
-    doc.text(`KSh ${(booking.totalPrice || booking.totalAmount || 0).toLocaleString()}`, pageWidth - 60, yPos);
-    
-    // QR Code section
-    yPos += 30;
-    
-    // Generate and add real QR code image
-    const qrCodeData = await generateQRCodeImage(booking.bookingReference || booking.id || '');
-    console.log('QR Code Data:', qrCodeData ? 'Generated successfully' : 'Failed to generate');
-    
-    // Position QR code in center-right area for better visibility
-    const qrX = pageWidth - 100; // More centered position
-    const qrY = yPos;
-    const qrSize = 80;
-    
-    // Create QR code container with border
-    doc.setFillColor(white);
-    doc.roundedRect(qrX - 5, qrY - 5, qrSize + 10, qrSize + 10, 8, 8, 'F');
-    doc.setDrawColor(primaryColor);
-    doc.setLineWidth(2);
-    doc.roundedRect(qrX - 5, qrY - 5, qrSize + 10, qrSize + 10, 8, 8, 'S');
-    
-    // Always show a square placeholder first to prove redesign is working
-    doc.setFillColor('#E5E7EB'); // Light gray background
-    doc.rect(qrX, qrY, qrSize, qrSize, 'F');
-    doc.setDrawColor(primaryColor);
-    doc.setLineWidth(2);
-    doc.rect(qrX, qrY, qrSize, qrSize, 'S');
-    
-    // Add text in the square
-    doc.setTextColor(primaryColor);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text('QR CODE', qrX + (qrSize/2), qrY + 25, { align: 'center' });
-    doc.text('PLACEHOLDER', qrX + (qrSize/2), qrY + 40, { align: 'center' });
-    doc.text('SQUARE', qrX + (qrSize/2), qrY + 55, { align: 'center' });
-    
-    // QR code label below
-    doc.setTextColor(darkGray);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text('SCAN AT ENTRANCE', qrX + (qrSize/2), qrY + qrSize + 15, { align: 'center' });
-    
-    // Add booking reference below QR code
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Ref: ${booking.bookingReference || booking.id || 'N/A'}`, qrX + (qrSize/2), qrY + qrSize + 25, { align: 'center' });
-    
-    // Try to add actual QR code if available
-    if (qrCodeData) {
-      try {
-        console.log('Attempting to add QR code image...');
-        // Add QR code with better positioning
-        doc.addImage(qrCodeData, 'PNG', qrX + 5, qrY + 5, qrSize - 10, qrSize - 10);
-        console.log('QR Code added to PDF successfully at position:', qrX, qrY);
-      } catch (error) {
-        console.error('Error adding QR code to PDF:', error);
-        // Keep the placeholder square
-      }
+      doc.setTextColor(dark);
+      doc.text(`${label} × ${qty}`, margin, y);
+      const amount = `KSh ${(qty * price).toLocaleString()}`;
+      doc.text(amount, pageWidth - margin, y, { align: 'right' });
+      y += 18;
+    };
+
+    const tickets = (booking as any).tickets;
+    if (tickets) {
+      row('Adult', tickets.adult.quantity, tickets.adult.price);
+      row('Child', tickets.child.quantity, tickets.child.price);
+      row('Senior', tickets.senior.quantity, tickets.senior.price);
     } else {
-      console.log('No QR code data available, showing placeholder');
+      doc.setFont('helvetica', 'normal');
+      doc.text(`${booking.ticket_type || (booking as any).ticketType} × ${(booking as any).quantity || 0}`, margin, y);
+      y += 18;
     }
-    
-    // Important instructions - positioned below QR code
-    yPos += 120; // More space for QR code section
-    doc.setFillColor('#FEF3C7');
-    doc.roundedRect(15, yPos, pageWidth - 30, 35, 8, 8, 'F');
-    doc.setDrawColor('#F59E0B');
-    doc.setLineWidth(1);
-    doc.roundedRect(15, yPos, pageWidth - 30, 35, 8, 8, 'S');
-    
-    doc.setTextColor('#92400E');
-    doc.setFontSize(11);
+
+    // Total
+    const totalAmount = (booking as any).total_price || (booking as any).totalPrice || (booking as any).totalAmount || 0;
+    y += 6;
+    doc.setDrawColor(lightGray);
+    doc.line(margin, y, pageWidth - margin, y);
+    y += 24;
     doc.setFont('helvetica', 'bold');
-    doc.text('IMPORTANT INSTRUCTIONS', 25, yPos + 10);
-    
+    doc.text('Total', margin, y);
+    doc.setTextColor(primary);
+    doc.text(`KSh ${Number(totalAmount).toLocaleString()}`, pageWidth - margin, y, { align: 'right' });
+
+    // Payment
+    y += 28;
+    doc.setTextColor(dark);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Payment', margin, y);
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(9);
-    doc.text('• Please bring a valid ID for verification', 25, yPos + 18);
-    doc.text('• Show this ticket or booking reference at entrance', 25, yPos + 26);
-    doc.text('• Arrive 15 minutes before your scheduled time', 25, yPos + 34);
-    
+    doc.setTextColor(gray);
+    y += 18;
+    doc.text(`Payment ID: ${(booking as any).payment_id || 'N/A'}`, margin, y);
+    y += 18;
+    doc.text(`Status: ${(booking as any).payment_status || 'COMPLETED'}`, margin, y);
+
+    // Bottom QR code - centered in the empty area
+    try {
+      const qrDataURL = await QRCode.toDataURL(bookingRef, { width: 160, margin: 1 });
+      const qrSize = 140;
+      const qrY = Math.max(y + 30, pageHeight - qrSize - 90);
+      const qrX = (pageWidth - qrSize) / 2;
+      doc.addImage(qrDataURL, 'PNG', qrX, qrY, qrSize, qrSize);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(gray);
+      doc.setFontSize(10);
+      doc.text('Scan at Entrance', pageWidth / 2, qrY + qrSize + 16, { align: 'center' });
+    } catch {}
+
     // Footer
-    const footerY = pageHeight - 20;
-    doc.setTextColor(lightGray);
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Thank you for choosing Wildlife Zoo!', pageWidth / 2, footerY, { align: 'center' });
-    doc.text('www.example.com | support@example.com', pageWidth / 2, footerY + 8, { align: 'center' });
-    
-    // Save the PDF
-    const fileName = `e-ticket-${booking.bookingReference || booking.id}.pdf`;
-    doc.save(fileName);
-    
-    toast.success('E-ticket PDF downloaded successfully!');
+    doc.setFontSize(9);
+    doc.setTextColor(gray);
+    doc.text('Thank you for choosing Wildlife Zoo!', margin, pageHeight - 20);
+
+    // Open preview and save
+    const blobUrl = doc.output('bloburl');
+    window.open(blobUrl, '_blank');
+    doc.save(`e-ticket-${bookingRef}.pdf`);
   };
 
   if (loading) {
@@ -350,7 +229,7 @@ export const BookingConfirmation: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <BookingConfirmationComponent
+        <Receipt
           booking={booking}
           onDownload={handleDownload}
         />

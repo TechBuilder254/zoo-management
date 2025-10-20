@@ -1,5 +1,5 @@
 import { supabase } from '../config/supabase';
-import { Animal, AnimalFormData, AnimalType, ConservationStatus } from '../types';
+import { Animal, AnimalFormData, AnimalType, ConservationStatus } from '../types/animal';
 
 export interface AnimalFilters {
   search?: string;
@@ -116,30 +116,31 @@ export const animalService = {
 
   create: async (data: AnimalFormData, _photos?: File[]): Promise<Animal> => {
     try {
+      console.log('Creating animal with data:', data); // Debug log
+      
       const { data: result, error } = await supabase
         .from('animals')
         .insert([{
           name: data.name,
           species: data.species,
-          category: data.type,
+          category: data.type || data.category, // Support both field names
           description: data.description,
-          diet: data.diet,
-          age: data.age,
-          sex: data.sex,
-          weight: data.weight,
-          conservation_status: data.conservationStatus,
-          interesting_facts: data.interestingFacts,
           habitat: data.habitat,
-          status: 'ACTIVE'
+          diet: data.diet || null, // Optional field
+          image_url: data.imageUrl || data.image_url || null, // Support both field names
+          lifespan: data.lifespan || null, // Optional field
+          status: data.status || 'ACTIVE'
         }])
         .select()
         .single();
 
       if (error) {
         console.error('Error creating animal:', error);
+        console.error('Error details:', error.message, error.details, error.hint);
         throw error;
       }
 
+      console.log('Animal created successfully:', result);
       return result;
     } catch (error) {
       console.error('Error in animalService.create:', error);
@@ -156,9 +157,7 @@ export const animalService = {
       if (data.type) updateData.category = data.type;
       if (data.description) updateData.description = data.description;
       if (data.diet) updateData.diet = data.diet;
-      if (data.age) updateData.age = data.age;
-      if (data.sex) updateData.sex = data.sex;
-      if (data.weight) updateData.weight = data.weight;
+      if (data.lifespan) updateData.lifespan = data.lifespan;
       if (data.conservationStatus) updateData.conservation_status = data.conservationStatus;
       if (data.interestingFacts) updateData.interesting_facts = data.interestingFacts;
       if (data.habitat) updateData.habitat = data.habitat;

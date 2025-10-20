@@ -184,7 +184,7 @@ export const Animals: React.FC = () => {
                           </p>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-3 text-xs text-gray-600 dark:text-gray-400">
-                              {animal.age && <><span>Age: {animal.age} years</span><span>•</span></>}
+                              {animal.lifespan && <><span>Lifespan: {animal.lifespan}</span><span>•</span></>}
                               <span><MapPin size={12} className="inline mr-1" />{typeof animal.habitat === 'string' ? animal.habitat : animal.habitat?.name}</span>
                             </div>
                             <Button variant="ghost" size="sm" className="text-xs">

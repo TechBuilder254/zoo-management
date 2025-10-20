@@ -27,7 +27,7 @@ export const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
       
       {/* Main Content */}
       <div className="lg:ml-56">
-        <div className="p-4 lg:p-6 min-h-screen">
+        <div className="px-4 py-4 lg:px-8 lg:py-6 min-h-screen w-full max-w-[1280px] mx-auto">
           {children}
         </div>
       </div>

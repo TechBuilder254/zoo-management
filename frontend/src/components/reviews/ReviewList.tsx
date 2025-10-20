@@ -8,6 +8,7 @@ interface ReviewListProps {
   loading?: boolean;
   onDelete?: (reviewId: string) => void;
   onHelpful?: (reviewId: string) => void;
+  onUpdate?: (reviewId: string, data: { rating?: number; comment?: string }) => void;
 }
 
 export const ReviewList: React.FC<ReviewListProps> = ({
@@ -15,6 +16,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
   loading = false,
   onDelete,
   onHelpful,
+  onUpdate,
 }) => {
   console.log('ReviewList: Received reviews:', reviews);
   console.log('ReviewList: Reviews count:', reviews.length);
@@ -49,6 +51,7 @@ export const ReviewList: React.FC<ReviewListProps> = ({
           review={review}
           onDelete={onDelete}
           onHelpful={onHelpful}
+          onUpdate={onUpdate}
         />
       ))}
     </div>

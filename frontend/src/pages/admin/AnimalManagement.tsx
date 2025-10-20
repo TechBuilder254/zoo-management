@@ -71,14 +71,19 @@ export const AnimalManagement: React.FC = () => {
   }
 
   const handleDelete = async (id: string) => {
-    if (window.confirm('Are you sure you want to delete this animal?')) {
-      try {
-        await animalService.delete(id);
-        setAnimals(animals.filter(a => a.id !== id));
-        toast.success('Animal deleted successfully');
-      } catch (error) {
-        toast.error('Failed to delete animal');
-      }
+    if (!window.confirm('Delete this animal permanently?')) return;
+    try {
+      await toast.promise(
+        animalService.delete(id as any),
+        {
+          loading: 'Deleting animal…',
+          success: 'Animal deleted',
+          error: 'Failed to delete animal',
+        }
+      );
+      setAnimals(animals.filter(a => a.id !== id));
+    } catch (error) {
+      // handled by toast
     }
   };
 
@@ -109,7 +114,12 @@ export const AnimalManagement: React.FC = () => {
   const handleAnimalSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
+      console.log('Form data received:', data); // Debug log
+      
       if (modalType === 'add') {
+        // The form data should already match what the service expects
+        console.log('Mapped animal data:', data); // Debug log
+        
         await animalService.create(data, []); // Pass empty array for photos
         toast.success('Animal created successfully');
         // Refresh animals list
@@ -125,7 +135,11 @@ export const AnimalManagement: React.FC = () => {
       handleCloseModal();
     } catch (error) {
       console.error('Failed to save animal:', error);
-      toast.error('Failed to save animal');
+      console.error('Error details:', error); // More detailed error logging
+      
+      // Handle error with proper typing
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`Failed to save animal: ${errorMessage}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -218,7 +232,7 @@ export const AnimalManagement: React.FC = () => {
                       
                       <div className="flex items-center gap-4 mt-2 text-sm text-gray-600 dark:text-gray-400">
                         <span><strong>Type:</strong> {animal.category}</span>
-                        <span><strong>Age:</strong> {animal.age || 'N/A'} {animal.age ? 'years' : ''}</span>
+                        <span><strong>Lifespan:</strong> {animal.lifespan || 'N/A'}</span>
                       </div>
                     </div>
                     
@@ -298,7 +312,7 @@ export const AnimalManagement: React.FC = () => {
                           </div>
                           <div className="flex items-center">
                             <Calendar size={14} className="mr-1" />
-                            <span>{animal.age || 'N/A'} {animal.age ? 'years' : ''}</span>
+                            <span>{animal.lifespan || 'N/A'}</span>
                           </div>
                         </div>
                       </div>

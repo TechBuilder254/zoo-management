@@ -15,10 +15,29 @@ interface AnimalCardProps {
 }
 
 export const AnimalCard: React.FC<AnimalCardProps> = ({ animal, onFavoriteToggle }) => {
-  const { isAuthenticated, user } = useAuth();
-  const [isFavorite, setIsFavorite] = React.useState(
-    user?.favoriteAnimals?.includes(animal.id || animal._id!) || false
-  );
+  const { isAuthenticated } = useAuth();
+  const [isFavorite, setIsFavorite] = React.useState(false);
+  const [favoriteLoading, setFavoriteLoading] = React.useState(false);
+
+  // Check if animal is favorited when component mounts
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      checkFavoriteStatus();
+    }
+  }, [isAuthenticated, animal.id, animal._id]);
+
+  const checkFavoriteStatus = async () => {
+    if (!isAuthenticated) return;
+    
+    try {
+      const favorites = await animalService.getFavorites();
+      const animalId = animal.id || animal._id;
+      const isFavorited = favorites.some(fav => (fav.id || fav._id) === animalId);
+      setIsFavorite(isFavorited);
+    } catch (error) {
+      console.error('Error checking favorite status:', error);
+    }
+  };
 
   const handleFavoriteClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -29,6 +48,9 @@ export const AnimalCard: React.FC<AnimalCardProps> = ({ animal, onFavoriteToggle
       return;
     }
 
+    if (favoriteLoading) return;
+
+    setFavoriteLoading(true);
     try {
       const animalId = animal.id || animal._id!;
       if (isFavorite) {
@@ -42,6 +64,8 @@ export const AnimalCard: React.FC<AnimalCardProps> = ({ animal, onFavoriteToggle
       onFavoriteToggle?.();
     } catch (error) {
       toast.error('Failed to update favorites');
+    } finally {
+      setFavoriteLoading(false);
     }
   };
 
@@ -80,7 +104,8 @@ export const AnimalCard: React.FC<AnimalCardProps> = ({ animal, onFavoriteToggle
           {/* Favorite Button */}
           <button
             onClick={handleFavoriteClick}
-            className="absolute top-3 right-3 p-2 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:scale-110 transition-transform"
+            disabled={favoriteLoading}
+            className="absolute top-3 right-3 p-2 bg-white dark:bg-gray-800 rounded-full shadow-lg hover:scale-110 transition-transform disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
           >
             <Heart
